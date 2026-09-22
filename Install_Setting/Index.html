@@ -502,9 +502,9 @@
 
     // เลเยอร์ลายน้ำ Forensic Watermark
     function updateWatermark() {
-        const idVal = studentIdInput.value.trim() || "EXAM-ONLINE";
-        const nameVal = document.getElementById('studentNameInput').value.trim() || "ESP32-STUDENT";
-        const markText = `${idVal} • ${nameVal}`;
+        const idVal = studentIdInput.value.trim();
+        const nameVal = document.getElementById('studentNameInput').value.trim();
+        const markText = (idVal || nameVal) ? `${idVal} • ${nameVal} • IoT-TATC-THERDSAK` : 'IoT-TATC-THERDSAK';
 
         watermarkOverlay.innerHTML = '';
         const count = 35;

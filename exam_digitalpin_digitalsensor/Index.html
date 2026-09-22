@@ -474,9 +474,9 @@
     function updateWatermark() {
         const overlay = document.getElementById('watermarkOverlay');
         if (!overlay) return;
-        const idVal = (document.getElementById('studentIdInput') ? document.getElementById('studentIdInput').value.trim() : '') || 'ESP32-EXAM';
-        const nameVal = (document.getElementById('studentNameInput') ? document.getElementById('studentNameInput').value.trim() : '') || 'CONFIDENTIAL';
-        const text = `${idVal} • ${nameVal} • ห้ามแคปหน้าจอ`;
+        const idVal = (document.getElementById('studentIdInput') ? document.getElementById('studentIdInput').value.trim() : '');
+        const nameVal = (document.getElementById('studentNameInput') ? document.getElementById('studentNameInput').value.trim() : '');
+        const text = (idVal || nameVal) ? `${idVal} • ${nameVal} • IoT-TATC-THERDSAK` : 'IoT-TATC-THERDSAK';
         
         overlay.innerHTML = '';
         for (let i = 0; i < 36; i++) {
