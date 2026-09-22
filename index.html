@@ -614,14 +614,14 @@
             <div class="stat-card">
                 <div class="stat-icon" style="background: rgba(56, 189, 248, 0.15); color: var(--accent-blue);">📚</div>
                 <div>
-                    <div class="stat-val">4 ชุด</div>
+                    <div class="stat-val">5 ชุด</div>
                     <div class="stat-lbl">แบบทดสอบที่พร้อมสอบ</div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo);">🎯</div>
                 <div>
-                    <div class="stat-val">60 ข้อ</div>
+                    <div class="stat-val">75 ข้อ</div>
                     <div class="stat-lbl">คำถามมาตรฐานทั้งหมด</div>
                 </div>
             </div>
@@ -775,6 +775,38 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Exam 5: Arduino IDE & VS Code PlatformIO -->
+                <div class="exam-card">
+                    <div>
+                        <div class="card-header">
+                            <span class="exam-badge" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8; border-color: rgba(14, 165, 233, 0.3);">โมดูลที่ 5: ติดตั้ง & สภาพแวดล้อม</span>
+                            <span style="font-size: 1.8rem;">💻</span>
+                        </div>
+                        <h3 class="exam-title">Arduino IDE & VS Code PlatformIO</h3>
+                        <p class="exam-desc">
+                            ทดสอบขั้นตอนการติดตั้งใช้งาน Arduino IDE, การลงบอร์ด ESP32/ESP8266 ด้วย Boards Manager URLs, การใช้งาน VS Code ร่วมกับ PlatformIO, โครงสร้างไฟล์ platformio.ini, โฟลเดอร์ src/main.cpp, ไดรเวอร์ USB CP2102/CH340 และวิธีแก้ปัญหาอัปโหลดโค้ดค้าง (BOOT button)
+                        </p>
+                        <div class="topic-tags">
+                            <span class="topic-tag">15 ข้อ (15 คะแนน)</span>
+                            <span class="topic-tag">Arduino IDE & Boards Manager</span>
+                            <span class="topic-tag">VS Code PlatformIO</span>
+                            <span class="topic-tag">platformio.ini</span>
+                            <span class="topic-tag">CP2102 / CH340 Driver</span>
+                            <span class="topic-tag">BOOT Pin & Serial Monitor</span>
+                        </div>
+                    </div>
+                    <div class="exam-footer" style="flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 10px; width: 100%;">
+                            <a href="/Install_Setting/" class="btn btn-primary" target="_blank" style="flex: 1; background: linear-gradient(135deg, #0284c7, #0369a1);">
+                                <span>🚀 เริ่มทำแบบทดสอบ</span>
+                            </a>
+                            <button class="btn btn-secondary" onclick="openTeacherModal('Install_Setting')" style="background: rgba(14, 165, 233, 0.12); color: #7dd3fc; border-color: rgba(14, 165, 233, 0.35);">
+                                <span>👨‍🏫 จัดการสำหรับครู (Sheet & โค้ด)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -797,6 +829,7 @@
                         <option value="exam_websocket">แบบทดสอบ: WebSocket</option>
                         <option value="exam_digitalpin_digitalsensor">แบบทดสอบ: Digital Pin & Sensor</option>
                         <option value="exam_analogpin_analogsensor">แบบทดสอบ: Analog Pin & ADC</option>
+                        <option value="Install_Setting">แบบทดสอบ: Arduino IDE & VS Code</option>
                     </select>
                 </div>
 
@@ -1054,7 +1087,9 @@
                 ? 'แบบทดสอบ: ESP32 Web Server & WebSocket'
                 : examKey === 'exam_digitalpin_digitalsensor'
                 ? 'แบบทดสอบ: Digital Pin, Switch, Relay และ DHT Sensor'
-                : 'แบบทดสอบ: Analog Pin, ADC, Sensors และการแปลงสัญญาณอนาล็อก';
+                : examKey === 'exam_analogpin_analogsensor'
+                ? 'แบบทดสอบ: Analog Pin, ADC, Sensors และการแปลงสัญญาณอนาล็อก'
+                : 'แบบทดสอบ: การติดตั้งใช้งาน Arduino IDE, VS Code PlatformIO และการอัปโหลดโค้ด ESP32/ESP8266';
 
             modal.style.display = 'flex';
             switchModalTab('code');

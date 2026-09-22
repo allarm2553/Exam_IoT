@@ -22,6 +22,10 @@
    - จำนวน: 15 ข้อ (15 คะแนน)
    - ครอบคลุมเนื้อหา: หน้าที่ของวงจร ADC, ความละเอียดเริ่มต้น 12-bit (0-4095) บน ESP32 เทียบกับ 10-bit (0-1023 พิน A0) บน ESP8266, คำสั่ง `analogRead()`, ข้อจำกัดพิน ADC2 เมื่อเปิดใช้ Wi-Fi, ฟังก์ชัน `map()`, เซนเซอร์แสง LDR กับวงจรแบ่งแรงดัน (Voltage Divider), เซนเซอร์วัดความชื้นในดิน Resistive (YL-69) กับปัญหาการกัดกร่อนจาก Electrolysis เทียบกับแบบ Capacitive, พิน AO ของเซนเซอร์ก๊าซ MQ Series, การแปลงค่า ADC เป็นโวลต์จริง (Vin = (adcValue/4095.0)*3.3), และการลด Noise ด้วย Signal Averaging / Oversampling
 
+5. **แบบทดสอบ: การติดตั้งใช้งาน Arduino IDE, VS Code PlatformIO และการอัปโหลดโค้ด ESP32/ESP8266 (`/Install_Setting`)**
+   - จำนวน: 15 ข้อ (15 คะแนน)
+   - ครอบคลุมเนื้อหา: หน้าที่ของ Arduino IDE ในการแปลโค้ดภาษาเครื่อง, Extension PlatformIO IDE บน VS Code, ข้อกำหนดการติดตั้ง Python บน Windows, การเพิ่ม Boards Manager URLs ใน Preferences, การค้นหาและติดตั้งแพ็กเกจ ESP32, โครงสร้างไฟล์ `platformio.ini`, โฟลเดอร์ `src/main.cpp`, คำสั่ง `#include <Arduino.h>`, ปุ่ม Verify/Compile, วิธีแก้ปัญหา Connecting Timeout ด้วยปุ่ม BOOT (IO0), ไอคอน Checkmark, เมนู Tools > Port, ไดรเวอร์ USB-to-UART (CP2102/CH340), การตั้งค่า Baud Rate ใน Serial Monitor และพารามิเตอร์ `monitor_speed = 115200`
+
 ---
 
 ## 🛡️ มาตรฐานความปลอดภัย 6 ชั้น (6-Layer Anti-Cheat)
@@ -77,5 +81,6 @@ Exam_IoT/
 ├── exam_wifi/            # ชุดข้อสอบ Wi-Fi บน ESP32 (Index.html, Code.gs)
 ├── exam_websocket/       # ชุดข้อสอบ ESP32 Web Server & WebSocket (Index.html, Code.gs)
 ├── exam_digitalpin_digitalsensor/ # ชุดข้อสอบ Digital Pin, Switch, Relay และ DHT Sensor (Index.html, Code.gs)
-└── exam_analogpin_analogsensor/   # ชุดข้อสอบ Analog Pin, ADC, Sensors และการแปลงสัญญาณ (Index.html, Code.gs)
+├── exam_analogpin_analogsensor/   # ชุดข้อสอบ Analog Pin, ADC, Sensors และการแปลงสัญญาณ (Index.html, Code.gs)
+└── Install_Setting/               # ชุดข้อสอบ การติดตั้ง Arduino IDE & VS Code PlatformIO (Index.html, Code.gs)
 ```

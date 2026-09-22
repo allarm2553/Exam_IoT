@@ -20,6 +20,8 @@
         examType = 'exam_digitalpin_digitalsensor';
     } else if (path.indexOf('analog') !== -1) {
         examType = 'exam_analogpin_analogsensor';
+    } else if (path.indexOf('install') !== -1 || path.indexOf('setting') !== -1) {
+        examType = 'Install_Setting';
     }
 
     function LocalScriptRunner() {

@@ -99,6 +99,26 @@ QUIZ_ANSWER_KEYS = {
             'q_13': 'Vin = (adcValue / 4095.0) * 3.3',
             'q_14': 'อ่านค่าจาก ADC หลายๆ ครั้งติดต่อกันแล้วนำมาหาค่าเฉลี่ย (Averaging / Oversampling)'
         }
+    },
+    'Install_Setting': {
+        'title': 'แบบทดสอบ: การติดตั้งใช้งาน Arduino IDE, VS Code PlatformIO และการอัปโหลดโค้ด ESP32/ESP8266',
+        'keys': {
+            'q_0': 'ล่ามแปลงภาษา C/C++ ให้เป็นภาษาเครื่อง (.hex/binary)',
+            'q_1': 'PlatformIO IDE',
+            'q_2': 'Python (เวอร์ชัน 3.5 ขึ้นไป)',
+            'q_3': 'File > Preferences ในช่อง "Additional Boards Manager URLs"',
+            'q_4': 'ไปที่เมนู Tools > Board > Boards Manager แล้วค้นหาคำว่า "esp32" เพื่อกด Install',
+            'q_5': 'platformio.ini',
+            'q_6': 'โฟลเดอร์ src ไฟล์ main.cpp',
+            'q_7': '#include <Arduino.h>',
+            'q_8': 'ตรวจสอบความถูกต้องของโค้ดและคอมไพล์เป็นภาษาเครื่องโดยยังไม่อัปโหลดลงบอร์ด',
+            'q_9': 'กดปุ่ม BOOT (หรือ IO0) บนบอร์ดค้างไว้ขณะที่โปรแกรมเริ่มการอัปโหลด (Connecting...)',
+            'q_10': 'ไอคอนรูปเครื่องหมายถูก (Checkmark)',
+            'q_11': 'Tools > Port',
+            'q_12': 'ต้องทำการติดตั้งไดรเวอร์ (Driver) เพื่อให้คอมพิวเตอร์มองเห็นพอร์ตสื่อสาร (COM Port)',
+            'q_13': 'เพื่อให้แสดงผลข้อความออกทางหน้าจอ Serial Monitor ได้อย่างถูกต้อง อ่านไม่เป็นขยะตัวอักษร',
+            'q_14': 'monitor_speed = 115200'
+        }
     }
 }
 
@@ -316,6 +336,8 @@ class ExamRequestHandler(BaseHTTPRequestHandler):
             rel_path = os.path.join('exam_digitalpin_digitalsensor', 'Index.html')
         elif path in ('/exam_analogpin_analogsensor', '/exam_analogpin_analogsensor/'):
             rel_path = os.path.join('exam_analogpin_analogsensor', 'Index.html')
+        elif path.lower() in ('/install_setting', '/install_setting/'):
+            rel_path = os.path.join('Install_Setting', 'Index.html')
         else:
             rel_path = path.lstrip('/')
 
