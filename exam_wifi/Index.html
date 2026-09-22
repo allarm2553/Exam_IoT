@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>แบบทดสอบ: การใช้งาน Wi-Fi บน ESP32</title>
+    <!-- รองรับทั้ง Google Apps Script และ Local Server -->
+    <script src="/local-adapter.js"></script>
+    <style>
+        * {
+            -webkit-touch-callout: none !important; /* ปิดเมนูคัดลอก/แชร์บนมือถือ iOS & Android */
+        }
+        body { 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            padding: 20px; 
+            background-color: #f0f2f5; 
+            color: #333; 
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none; /* ห้ามคลุมดำ/คัดลอกข้อความ */
+            touch-action: pan-y; /* ให้เลื่อนจอได้ แต่ปิด gesture ลัด */
+        }
+        input, textarea {
+            -webkit-touch-callout: default !important;
+            -webkit-user-select: auto !important;
+            user-select: auto !important; /* ให้พิมพ์ข้อมูลในกล่องข้อความได้ตามปกติ */
+        }
+        
+        /* ลายน้ำรักษาความปลอดภัยแบบไดนามิกระบุตัวตนผู้สอบ (Forensic Watermark) */
+        #watermarkOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.12;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-auto-rows: 140px;
+            overflow: hidden;
+        }
+        .watermark-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(-25deg);
+            font-size: 12px;
+            font-weight: 800;
+            color: #111;
+            text-align: center;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        /* ซ่อนเนื้อหาทั้งหมดเมื่อมีการสั่งพิมพ์ (Ctrl+P หรือ Save as PDF) */
+        @media print {
+            body { display: none !important; }
+        }
+
+        /* ม่านป้องกันการแคปหน้าจอเมื่อหน้าต่างหลุดโฟกัส (เช่น กด Win+Shift+S หรือเปิด Snipping Tool) */
+        #captureShield {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #0b0c10;
+            z-index: 9998;
+            color: white;
+            text-align: center;
+            padding-top: 18%;
+        }
+        .form-container { max-width: 650px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-top: 0; }
+        .question-block { background: #f8f9fa; padding: 20px; margin-bottom: 20px; border-radius: 8px; border-left: 5px solid #007bff; }
+        .question-title { font-weight: bold; margin-bottom: 12px; font-size: 1.1em; line-height: 1.5; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+        .info-group { margin-bottom: 10px; }
+        .info-group-full { grid-column: span 2; }
+        .info-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.95em; color: #555; }
+        
+        .option-item { margin: 10px 0; display: flex; align-items: center; }
+        .option-item input { margin-right: 12px; cursor: pointer; transform: scale(1.2); }
+        .option-item label { cursor: pointer; width: 100%; font-size: 1em; }
+        .submit-btn { background-color: #007bff; color: white; padding: 14px 24px; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; width: 100%; font-weight: bold; transition: background 0.3s; margin-top: 10px; }
+        .submit-btn:hover { background-color: #0056b3; }
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+
+        /* หน้าจอล็อกฉากหลังมืดทึบ */
+        #lockScreen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.96);
+            z-index: 9999;
+            color: white;
+            text-align: center;
+            padding-top: 15%;
+        }
+        .lock-box { max-width: 500px; margin: 0 auto; padding: 35px; background: #222; border: 2px solid #ff3b30; border-radius: 12px; }
+        .refresh-btn { background-color: #ff3b30; color: white; padding: 15px 30px; border: none; border-radius: 6px; font-size: 1em; cursor: pointer; margin-top: 25px; font-weight: bold; }
+        .refresh-btn:hover { background-color: #d32f2f; }
+        
+        @media (max-width: 480px) {
+            .info-grid { grid-template-columns: 1fr; }
+            .info-group-full { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- เลเยอร์ลายน้ำรักษาความปลอดภัยรอบทิศทางสำหรับ Mobile & Desktop -->
+<div id="watermarkOverlay"></div>
+
+<!-- ม่านดำป้องกันการบันทึกภาพหน้าจอขณะหลุดโฟกัส / Snipping Tool -->
+<div id="captureShield">
+    <div style="max-width: 480px; margin: 0 auto; padding: 30px; background: #16181f; border: 2px solid #ff4757; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="font-size: 55px; margin-bottom: 15px;">🚫</div>
+        <h2 style="color: #ff4757; border: none; margin-top: 0; margin-bottom: 10px;">ห้ามบันทึกภาพหน้าจอ</h2>
+        <p style="font-size: 1.1em; color: #ddd; line-height: 1.6; margin: 0;">
+            ระบบตรวจพบการเปิดเครื่องมือแคปหน้าจอ หรือหลุดโฟกัสจากแบบทดสอบ<br>
+            <span style="font-size: 0.9em; color: #aaa;">(คลิกกลับมาที่หน้าต่างเพื่อทำแบบทดสอบต่อ)</span>
+        </p>
+    </div>
+</div>
+
+<!-- บล็อกเลเยอร์ล็อกหน้าจอ -->
+<div id="lockScreen">
+    <div class="lock-box">
+        <h1 style="color: #ff3b30; margin-bottom: 15px; font-size: 2em;">⚠️ แบบทดสอบถูกล็อก!</h1>
+        <p style="font-size: 1.2em;">คุณสลับหน้าจอหรือเปิดแอปอื่นครบ 3 ครั้ง</p>
+        <p style="font-size: 0.9em; color: #aaa; margin-top: 10px;">ระบบได้ส่งประวัตินี้ไปยังผู้สอนแล้ว และคำตอบเดิมได้รับการรีเซ็ตทั้งหมด</p>
+        <button class="refresh-btn" onclick="location.reload();">รีเฟรชเพื่อเริ่มทำใหม่</button>
+    </div>
+</div>
+
+<div style="max-width: 650px; margin: 0 auto 14px auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+    <a href="/" style="color: #007bff; text-decoration: none; font-size: 0.95em; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+        <span>← กลับสู่หน้า Dashboard รวมแบบทดสอบ</span>
+    </a>
+    <div style="display: flex; gap: 8px; align-items: center;">
+        <button type="button" onclick="toggleTeacherPanel()" style="background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; padding: 5px 12px; border-radius: 6px; font-size: 0.85em; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+            <span>👨‍🏫 ส่วนของครูผู้สอน (Google Sheet & โค้ด)</span>
+        </button>
+        <span style="font-size: 0.85em; color: #666; background: #e9ecef; padding: 4px 8px; border-radius: 4px;">ESP32 Wi-Fi</span>
+    </div>
+</div>
+
+<!-- กล่องส่วนของครูผู้สอนสำหรับตั้งค่า Google Sheets และคัดลอกโค้ด -->
+<div id="teacherPanel" style="max-width: 650px; margin: 0 auto 20px auto; background: #ffffff; border: 2px solid #38bdf8; border-radius: 12px; padding: 22px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 14px;">
+        <div style="font-weight: bold; color: #0f172a; font-size: 1.05em; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.3em;">👨‍🏫</span>
+            <span>การตั้งค่าครูผู้สอน: บันทึกลิงก์ Google Sheets & คัดลอกโค้ดสำหรับ Deploy</span>
+        </div>
+        <button type="button" onclick="toggleTeacherPanel()" style="background: none; border: none; font-size: 1.2em; cursor: pointer; color: #64748b;">✕</button>
+    </div>
+
+    <div>
+        <label for="teacherSheetUrl" style="display: block; font-weight: bold; font-size: 0.92em; color: #334155; margin-bottom: 6px;">
+            📊 วางลิงก์ Google Sheets (สำหรับเก็บคะแนนและตรวจสิทธิ์ส่งซ้ำ):
+        </label>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <input type="text" id="teacherSheetUrl" placeholder="วางลิงก์ เช่น https://docs.google.com/spreadsheets/d/1BxiMVs.../edit" style="flex: 1; min-width: 260px; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95em;">
+            <button type="button" onclick="saveSheetUrl()" style="background: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <span>💾 เซฟลิงก์</span>
+            </button>
+        </div>
+
+        <div id="sheetStatusBox" style="margin-top: 10px; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.88em; color: #475569; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <span id="sheetIdDisplay">สถานะ: ยังไม่ได้บันทึกลิงก์ Google Sheets</span>
+            <a id="sheetExternalLink" href="#" target="_blank" style="display: none; color: #2563eb; text-decoration: none; font-weight: bold;">↗️ เปิด Google Sheets ของคุณ</a>
+        </div>
+    </div>
+
+    <!-- ปุ่มคัดลอกโค้ด Code.gs ที่ดึง Sheet ID อัตโนมัติ และปุ่มคัดลอก Index.html -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px;">
+        <button type="button" onclick="copyCodeGsWithSheetId()" style="background: #059669; color: white; border: none; padding: 12px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 6px rgba(5,150,105,0.25); font-size: 0.92em;">
+            <span>📋 คัดลอก Code.gs (ใส่ Sheet ID แล้ว)</span>
+        </button>
+        <button type="button" onclick="copyIndexHtmlCode()" style="background: #4f46e5; color: white; border: none; padding: 12px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 6px rgba(79,70,229,0.25); font-size: 0.92em;">
+            <span>📄 คัดลอก Index.html</span>
+        </button>
+    </div>
+
+    <div id="copyAlert" style="display: none; margin-top: 12px; padding: 10px; border-radius: 6px; font-size: 0.9em; font-weight: bold; text-align: center;"></div>
+</div>
+
+<div class="form-container">
+    <h2>แบบทดสอบ: การใช้งาน Wi-Fi บน ESP32</h2>
+    
+    <form action="" method="POST" id="quizForm">
+        
+        <!-- ส่วนข้อมูลผู้กรอกส่วนตัวก่อนเริ่มทำโจทย์ -->
+        <div class="question-block" style="border-left: 5px solid #28a745;">
+            <div class="question-title" style="color: #28a745; margin-bottom: 15px;">📝 ข้อมูลผู้เข้าสอบ</div>
+            <div class="info-grid">
+                <div class="info-group">
+                    <label for="studentIdInput">เลขประจำตัว (ID)</label>
+                    <input type="text" name="studentId" id="studentIdInput" required placeholder="เช่น 64XXXXXX">
+                    <div id="idStatusMsg" style="font-size: 0.85em; margin-top: 5px; font-weight: bold; display: none;"></div>
+                </div>
+                <div class="info-group">
+                    <label for="studentRoomInput">ห้องเรียน / กลุ่ม</label>
+                    <input type="text" name="studentRoom" id="studentRoomInput" required placeholder="เช่น ม.6/1 หรือ Sec 2">
+                </div>
+                <div class="info-group info-group-full">
+                    <label for="studentNameInput">ชื่อ - นามสกุลจริง</label>
+                    <input type="text" name="studentName" id="studentNameInput" required placeholder="นาย / นางสาว...">
+                </div>
+            </div>
+        </div>
+
+        <!-- กล่องสำหรับดึงข้อสอบสุ่มเรียงลำดับคำถาม -->
+        <div id="questionsContainer"></div>
+
+        <button type="submit" class="submit-btn">ส่งคำตอบ</button>
+    </form>
+</div>
+
+<script>
+    // ข้อมูลข้อสอบ 15 ข้อต้นแบบ
+    const quizData = [
+        {
+            q: "โหมดการทำงานใดที่ ESP32 ทำหน้าที่เป็นเหมือนอุปกรณ์ลูกข่ายเพื่อเชื่อมต่อกับ Router?",
+            c: ["Access Point (AP)", "Station (STA)", "Web Server", "Dual Mode"],
+            qKey: "q_0"
+        },
+        {
+            q: "เมื่อตั้งค่า ESP32 เป็น Access Point (AP) โดยปกติจะมี IP Address เริ่มต้นคืออะไร?",
+            c: ["192.168.1.1", "10.0.0.1", "192.168.4.1", "172.16.0.1"],
+            qKey: "q_1"
+        },
+        {
+            q: "คำสั่งใดใช้สำหรับการเชื่อมต่อ Wi-Fi ในโหมด Station?",
+            c: ["WiFi.softAP(ssid, password)", "WiFi.begin(ssid, password)", "WiFi.connect(ssid, password)", "WiFi.config(ssid, password)"],
+            qKey: "q_2"
+        },
+        {
+            q: "RSSI (Received Signal Strength Indicator) ใช้สำหรับวัดค่าอะไร?",
+            c: ["ความเร็วในการรับส่งข้อมูล", "ความเข้มของสัญญาณวิทยุที่ได้รับ", "จำนวนอุปกรณ์ที่เชื่อมต่อ", "ระยะเวลาที่เชื่อมต่อได้"],
+            qKey: "q_3"
+        },
+        {
+            q: "ค่า RSSI ใดต่อไปนี้แสดงถึงสัญญาณ Wi-Fi ที่มีความแรงมากที่สุด?",
+            c: ["-30 dBm", "-50 dBm", "-70 dBm", "-90 dBm"],
+            qKey: "q_4"
+        },
+        {
+            q: "MAC Address ของ ESP32 มีลักษณะเฉพาะอย่างไร?",
+            c: ["เป็นหมายเลข IP ที่เปลี่ยนไปตาม Router", "เป็นหมายเลขประจำตัวฮาร์ดแวร์ที่ไม่ซ้ำกัน", "เป็นชื่อที่ผู้ใช้ตั้งขึ้นเองได้อิสระ", "เป็นรหัสผ่านสำหรับเข้าใช้งาน Wi-Fi"],
+            qKey: "q_5"
+        },
+        {
+            q: "Hostname เริ่มต้นของ ESP32 จากโรงงานคือชื่ออะไร?",
+            c: ["esp32-device", "arduino-esp32", "espressif", "smart-home-node"],
+            qKey: "q_6"
+        },
+        {
+            q: "หากต้องการกำหนด IP Address คงที่ (Static IP) ให้กับ ESP32 ต้องใช้คำสั่งใด?",
+            c: ["WiFi.setIP()", "WiFi.localIP()", "WiFi.config()", "WiFi.softAPConfig()"],
+            qKey: "q_7"
+        },
+        {
+            q: "สถานะ (Status) ใดที่บ่งบอกว่า ESP32 เชื่อมต่อกับเครือข่าย Wi-Fi สำเร็จแล้ว?",
+            c: ["WL_IDLE_STATUS", "WL_DISCONNECTED", "WL_CONNECTED", "WL_CONNECT_FAILED"],
+            qKey: "q_8"
+        },
+        {
+            q: "ข้อใดคือข้อดีของการใช้ Wi-Fi Events ในการจัดการการเชื่อมต่อใหม่?",
+            c: ["ทำให้สัญญาณ Wi-Fi แรงขึ้น", "ไม่ต้องเขียนโค้ดตรวจสอบสถานะใน loop() ตลอดเวลา", "ป้องกันการโดนแฮกข้อมูล", "ช่วยประหยัดหน่วยความจำ Flash"],
+            qKey: "q_9"
+        },
+        {
+            q: "คำสั่งใดใช้สำหรับพยายามเชื่อมต่อกับ Access Point เดิมที่เคยเชื่อมต่อไว้ก่อนหน้า?",
+            c: ["WiFi.reconnect()", "WiFi.retry()", "WiFi.begin()", "WiFi.status()"],
+            qKey: "q_10"
+        },
+        {
+            q: "Event ใดจะเกิดขึ้นเมื่อ ESP32 ในโหมด Station หลุดจากการเชื่อมต่อกับ Router?",
+            c: ["ARDUINO_EVENT_WIFI_STA_CONNECTED", "ARDUINO_EVENT_WIFI_STA_GOT_IP", "ARDUINO_EVENT_WIFI_STA_DISCONNECTED", "ARDUINO_EVENT_WIFI_READY"],
+            qKey: "q_11"
+        },
+        {
+            q: "ในการตั้งค่า Access Point (soft-AP) รหัสผ่านที่กำหนดต้องมีอย่างน้อยกี่ตัวอักษร?",
+            c: ["4 ตัวอักษร", "6 ตัวอักษร", "8 ตัวอักษร", "10 ตัวอักษร"],
+            qKey: "q_12"
+        },
+        {
+            q: "Library พื้นฐานที่จำเป็นต้อง Include ทุกครั้งเมื่อต้องการใช้งาน Wi-Fi บน ESP32 คืออะไร?",
+            c: ["ESP8266WiFi.h", "WiFi.h", "WiFiClient.h", "ESP32WiFi.h"],
+            qKey: "q_13"
+        },
+        {
+            q: "ฟังก์ชัน WiFi.localIP() ใช้สำหรับทำหน้าที่อะไรในโหมด Station?",
+            c: ["เปลี่ยนหมายเลข IP Address", "อ่านค่า IP Address ที่ได้รับจาก Router", "ค้นหาเครือข่าย Wi-Fi รอบตัว", "ตรวจสอบความแรงของสัญญาณ"],
+            qKey: "q_14"
+        }
+    ];
+
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    // ฟังก์ชันสุ่มเรียงลำดับคำถามและสร้างตัวเลือก (ไม่แสดงเลขข้อเพื่อความปลอดภัย)
+    function renderQuiz() {
+        const container = document.getElementById('questionsContainer');
+        if (!container) return;
+        container.innerHTML = '';
+        const shuffledQuiz = shuffle([...quizData]);
+
+        shuffledQuiz.forEach((item, qIndex) => {
+            const block = document.createElement('div');
+            block.className = 'question-block';
+
+            const title = document.createElement('div');
+            title.className = 'question-title';
+            title.innerText = item.q;
+            block.appendChild(title);
+
+            const shuffledOptions = shuffle([...item.c]);
+            const optionsContainer = document.createElement('div');
+            
+            shuffledOptions.forEach((optionText, oIndex) => {
+                const optionItem = document.createElement('div');
+                optionItem.className = 'option-item';
+
+                const inputId = `id_${item.qKey}_o_${oIndex}`;
+                
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = item.qKey;
+                radio.value = optionText;
+                radio.id = inputId;
+                radio.required = true;
+
+                const label = document.createElement('label');
+                label.htmlFor = inputId;
+                label.innerText = optionText;
+
+                optionItem.appendChild(radio);
+                optionItem.appendChild(label);
+                optionsContainer.appendChild(optionItem);
+            });
+
+            block.appendChild(optionsContainer);
+            container.appendChild(block);
+        });
+    }
+
+    // รันการแสดงผลโจทย์ทันทีเมื่อหน้าพร้อม
+    if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', renderQuiz);
+    } else {
+        renderQuiz();
+    }
+
+    // --- ส่วนควบคุมพฤติกรรม Anti-Cheat และป้องกันการแคปหน้าจอ ---
+    let cheatCount = 0;
+    const captureShield = document.getElementById('captureShield');
+    const lockScreen = document.getElementById('lockScreen');
+
+    // 1. ป้องกันการคลิกขวา และการลากข้อความ
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    });
+    document.addEventListener('dragstart', function(e) {
+        e.preventDefault();
+        return false;
+    });
+
+    // 2. ม่านดำป้องกันการใช้ Snipping Tool / แคปหน้าจอขณะหลุดโฟกัส
+    window.addEventListener('blur', function() {
+        if (lockScreen.style.display !== 'block') {
+            captureShield.style.display = 'block';
+        }
+    });
+    window.addEventListener('focus', function() {
+        setTimeout(function() {
+            captureShield.style.display = 'none';
+        }, 250);
+    });
+
+    // 3. ฟังก์ชันจัดการเมื่อตรวจพบการกดปุ่มแคปหน้าจอ (PrintScreen / คีย์ลัด)
+    function triggerScreenshotProtection() {
+        // ล้างข้อมูลภาพใน Clipboard ทันที
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText('⚠️ ห้ามแคปหน้าจอหรือคัดลอกข้อสอบ');
+        }
+
+        // กางม่านดำป้องกันชั่วคราว
+        captureShield.style.display = 'block';
+        setTimeout(function() {
+            captureShield.style.display = 'none';
+        }, 1800);
+
+        let studentId = document.getElementById("studentIdInput").value.trim() || "ไม่ระบุ ID";
+        let studentName = document.getElementById("studentNameInput").value.trim() || "ไม่ระบุชื่อ";
+        let studentRoom = document.getElementById("studentRoomInput").value.trim() || "ไม่ระบุห้อง";
+
+        // บันทึกความพยายามลง Google Sheets
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run.logBehavior(studentId, studentName, studentRoom, "พยายามแคปหน้าจอ (Screenshot/PrintScreen)", 1);
+        }
+
+        alert("⚠️ คำเตือน: ไม่อนุญาตให้แคปหน้าจอหรือบันทึกภาพข้อสอบ (ระบบได้บันทึกประวัตินี้แล้ว)");
+    }
+
+    // 4. ดักจับปุ่ม PrintScreen และคีย์ลัดสั่งพิมพ์/แคปจอ
+    window.addEventListener('keyup', function(e) {
+        if (e.key === 'PrintScreen' || e.keyCode === 44) {
+            triggerScreenshotProtection();
+        }
+    });
+
+    window.addEventListener('keydown', function(e) {
+        // ดัก PrintScreen
+        if (e.key === 'PrintScreen' || e.keyCode === 44) {
+            e.preventDefault();
+            triggerScreenshotProtection();
+            return false;
+        }
+
+        // ดัก Ctrl+P / Cmd+P (พิมพ์หน้าเว็บ / บันทึก PDF)
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+            e.preventDefault();
+            alert('⚠️ ไม่อนุญาตให้สั่งพิมพ์หรือบันทึกเป็น PDF');
+            return false;
+        }
+
+        // ดัก Ctrl+S / Cmd+S (บันทึกหน้าเว็บ)
+        if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+            e.preventDefault();
+            return false;
+        }
+
+        // ดัก Ctrl+Shift+S / Cmd+Shift+S (Snipping Tool)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 's' || e.key === 'S')) {
+            e.preventDefault();
+            triggerScreenshotProtection();
+            return false;
+        }
+
+        // ดัก F12 / DevTools
+        if (e.key === 'F12' || 
+            ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j')) ||
+            ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U'))) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // 5. ป้องกันระบบสัมผัสและ Gesture บน Mobile (เช่น ปัด 3 นิ้วแคปหน้าจอบน Android/Xiaomi/Oppo/Samsung)
+    document.addEventListener('touchstart', function(e) {
+        if (e.touches && e.touches.length >= 3) {
+            e.preventDefault();
+            e.stopPropagation();
+            triggerScreenshotProtection();
+        }
+    }, { passive: false });
+
+    window.addEventListener('pagehide', function() {
+        if (lockScreen.style.display !== 'block') {
+            captureShield.style.display = 'block';
+        }
+    });
+
+    // 6. ระบบลายน้ำดิจิทัล (Forensic Watermark) ระบุตัวตนผู้สอบรอบทิศทาง
+    function updateWatermark() {
+        const overlay = document.getElementById('watermarkOverlay');
+        if (!overlay) return;
+        const idVal = (document.getElementById('studentIdInput') ? document.getElementById('studentIdInput').value.trim() : '') || 'ESP32-EXAM';
+        const nameVal = (document.getElementById('studentNameInput') ? document.getElementById('studentNameInput').value.trim() : '') || 'CONFIDENTIAL';
+        const text = `${idVal} • ${nameVal} • ห้ามแคปหน้าจอ`;
+        
+        overlay.innerHTML = '';
+        for (let i = 0; i < 36; i++) {
+            const item = document.createElement('div');
+            item.className = 'watermark-item';
+            item.innerText = text;
+            overlay.appendChild(item);
+        }
+    }
+    updateWatermark();
+
+    // 7. ตรวจจับการสลับแท็บ / สลับหน้าจอ (Visibility Change)
+    document.addEventListener("visibilitychange", function() {
+        if (document.hidden) {
+            cheatCount++;
+            
+            let studentId = document.getElementById("studentIdInput").value.trim() || "ไม่ระบุ ID";
+            let studentName = document.getElementById("studentNameInput").value.trim() || "ไม่ระบุชื่อ";
+            let studentRoom = document.getElementById("studentRoomInput").value.trim() || "ไม่ระบุห้อง";
+
+            // บันทึกประวัติลง Google Sheets ผ่าน Apps Script
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run.logBehavior(studentId, studentName, studentRoom, "สลับหน้าจอ/เปิดแอปอื่น (ครั้งที่ " + cheatCount + ")", cheatCount);
+            }
+
+            if (cheatCount >= 3) {
+                document.getElementById("lockScreen").style.display = "block";
+                document.getElementById("quizForm").reset();
+            } else {
+                alert("⚠️ คำเตือนการทุจริต (" + cheatCount + "/3):\nคุณสลับหน้าจอหรือเปิดแอปอื่น ระบบได้บันทึกประวัตินี้แล้ว\nหากครบ 3 ครั้ง แบบทดสอบจะถูกล็อกทันที!");
+            }
+        }
+    });
+
+    // --- ส่วนตรวจสอบรหัสประจำตัวผู้เข้าสอบ (ส่งได้เพียงครั้งเดียว) ---
+    const studentIdInput = document.getElementById('studentIdInput');
+    const idStatusMsg = document.getElementById('idStatusMsg');
+    const submitBtn = document.querySelector('.submit-btn');
+    let isIdDuplicate = false;
+
+    // ตรวจสอบทันทีเมื่อผู้สอบกรอกรหัสเสร็จแล้วคลิกช่องอื่น
+    studentIdInput.addEventListener('blur', function() {
+        const idVal = this.value.trim();
+        if (!idVal) {
+            idStatusMsg.style.display = 'none';
+            isIdDuplicate = false;
+            submitBtn.disabled = false;
+            return;
+        }
+
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            idStatusMsg.style.display = 'block';
+            idStatusMsg.style.color = '#555';
+            idStatusMsg.innerText = '🔍 กำลังตรวจสอบสิทธิ์รหัสประจำตัว...';
+
+            google.script.run
+                .withSuccessHandler(function(res) {
+                    if (res && res.submitted) {
+                        isIdDuplicate = true;
+                        idStatusMsg.style.color = '#dc3545';
+                        idStatusMsg.innerText = '❌ รหัสนี้เคยส่งแบบทดสอบไปแล้ว (ไม่อนุญาตให้ส่งซ้ำ)';
+                        submitBtn.disabled = true;
+                    } else {
+                        isIdDuplicate = false;
+                        idStatusMsg.style.color = '#28a745';
+                        idStatusMsg.innerText = '✅ รหัสนี้มีสิทธิ์เข้าสอบ (ยังไม่เคยส่งคำตอบ)';
+                        submitBtn.disabled = false;
+                    }
+                })
+                .withFailureHandler(function() {
+                    idStatusMsg.style.display = 'none';
+                    submitBtn.disabled = false;
+                })
+                .checkStudentSubmitted(idVal);
+        }
+    });
+
+    studentIdInput.addEventListener('input', function() {
+        if (isIdDuplicate) {
+            isIdDuplicate = false;
+            idStatusMsg.style.display = 'none';
+            submitBtn.disabled = false;
+        }
+        updateWatermark();
+    });
+
+    const studentNameInput = document.getElementById('studentNameInput');
+    if (studentNameInput) {
+        studentNameInput.addEventListener('input', updateWatermark);
+    }
+
+    // --- ส่วนจัดการส่งคำตอบแบบ Asynchronous ป้องกัน Error 405 ---
+    document.getElementById('quizForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // ตรวจสอบว่ารหัสถูกล็อกเนื่องจากเคยส่งแล้วหรือไม่
+        if (isIdDuplicate) {
+            alert('❌ ไม่สามารถส่งได้: รหัสประจำตัวนี้เคยส่งแบบทดสอบไปแล้ว');
+            return;
+        }
+
+        // ตรวจสอบว่าตอบครบทุกข้อหรือไม่
+        for (let i = 0; i < 15; i++) {
+            const checked = document.querySelector(`input[name="q_${i}"]:checked`);
+            if (!checked) {
+                alert(`กรุณาตอบคำถามให้ครบทุกข้อก่อนส่ง (ยังมีข้อที่ไม่ได้เลือกคำตอบ)`);
+                return;
+            }
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = '⏳ กำลังส่งคำตอบและตรวจผล...';
+
+        const formData = {
+            studentId: document.getElementById('studentIdInput').value.trim(),
+            studentRoom: document.getElementById('studentRoomInput').value.trim(),
+            studentName: document.getElementById('studentNameInput').value.trim()
+        };
+
+        for (let i = 0; i < 15; i++) {
+            const sel = document.querySelector(`input[name="q_${i}"]:checked`);
+            formData[`q_${i}`] = sel ? sel.value : "ไม่ได้ตอบ";
+        }
+
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    if (response && response.alreadySubmitted) {
+                        isIdDuplicate = true;
+                        idStatusMsg.style.display = 'block';
+                        idStatusMsg.style.color = '#dc3545';
+                        idStatusMsg.innerText = '❌ ' + response.message;
+                        submitBtn.disabled = true;
+                        submitBtn.innerText = 'ส่งคำตอบแล้ว';
+                        alert('⚠️ ไม่สามารถส่งได้:\n' + response.message);
+                        return;
+                    }
+
+                    if (response && !response.success) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = 'ส่งคำตอบ';
+                        alert('⚠️ ' + (response.message || 'เกิดข้อผิดพลาด'));
+                        return;
+                    }
+
+                    const scoreText = response && response.score !== undefined ? response.score : "ตรวจแล้ว";
+                    document.querySelector('.form-container').innerHTML = `
+                        <div style="text-align:center; padding: 40px 15px;">
+                            <div style="font-size: 55px; margin-bottom: 15px;">🎉</div>
+                            <h2 style="color: #28a745; border: none; margin-bottom: 10px;">ส่งคำตอบเรียบร้อยแล้ว</h2>
+                            <p style="font-size: 1.15em; color: #444; margin-bottom: 20px;">
+                                ระบบได้รับข้อมูลของ <strong>${formData.studentName}</strong> (ห้อง ${formData.studentRoom}) เรียบร้อยแล้วครับ
+                            </p>
+                            <div style="display: inline-block; background: #e8f5e9; border: 1px solid #c8e6c9; padding: 18px 30px; border-radius: 10px;">
+                                <div style="font-size: 0.9em; color: #2e7d32; font-weight: bold;">คะแนนสอบที่ได้</div>
+                                <div style="font-size: 2.4em; color: #1b5e20; font-weight: bold; margin-top: 5px;">${scoreText} / 15</div>
+                            </div>
+                        </div>
+                    `;
+                })
+                .withFailureHandler(function(err) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = 'ส่งคำตอบ';
+                    alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล: " + (err.message || err));
+                })
+                .processQuiz(formData);
+        } else {
+            // โหมดทดสอบหน้าเว็บ (ออฟไลน์)
+            alert("บันทึกคำตอบสำเร็จ (โหมดทดสอบภายนอก Google Apps Script)");
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'ส่งคำตอบ';
+        }
+    });
+
+    // =========================================================================
+    // ฟังก์ชันส่วนของครูผู้สอน: เซฟลิงก์ Google Sheets & คัดลอกโค้ด Deploy
+    // =========================================================================
+    const CURRENT_EXAM_KEY = 'exam_wifi';
+
+    function extractSheetId(input) {
+        if (!input) return '';
+        const trimmed = String(input).trim();
+        const match = trimmed.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        if (match && match[1]) return match[1];
+        if (/^[a-zA-Z0-9-_]{20,80}$/.test(trimmed)) return trimmed;
+        return '';
+    }
+
+    function toggleTeacherPanel() {
+        const panel = document.getElementById('teacherPanel');
+        if (!panel) return;
+        const isHidden = panel.style.display === 'none' || panel.style.display === '';
+        panel.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) {
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function updateSheetDisplay(url, id) {
+        const idDisplay = document.getElementById('sheetIdDisplay');
+        const extLink = document.getElementById('sheetExternalLink');
+        if (!idDisplay) return;
+
+        if (id) {
+            idDisplay.innerHTML = `✅ <strong>Google Sheet ID:</strong> <code style="background:#e2e8f0; padding:2px 6px; border-radius:4px; color:#0f172a;">${id}</code>`;
+            if (url && url.startsWith('http')) {
+                extLink.href = url;
+                extLink.style.display = 'inline-block';
+            } else {
+                extLink.href = `https://docs.google.com/spreadsheets/d/${id}/edit`;
+                extLink.style.display = 'inline-block';
+            }
+        } else {
+            idDisplay.innerText = 'สถานะ: ยังไม่ได้บันทึกลิงก์ Google Sheets';
+            extLink.style.display = 'none';
+        }
+    }
+
+    async function saveSheetUrl() {
+        const input = document.getElementById('teacherSheetUrl');
+        const rawVal = input ? input.value.trim() : '';
+        const sheetId = extractSheetId(rawVal);
+        
+        if (!rawVal) {
+            alert('กรุณากรอกลิงก์หรือ ID ของ Google Sheets');
+            return;
+        }
+
+        if (!sheetId) {
+            alert('❌ รูปแบบลิงก์ Google Sheets ไม่ถูกต้อง กรุณาคัดลอก URL จากแอดเดรสบาร์ของเบราว์เซอร์');
+            return;
+        }
+
+        // บันทึกลง localStorage
+        localStorage.setItem(`sheet_url_${CURRENT_EXAM_KEY}`, rawVal);
+        localStorage.setItem(`sheet_id_${CURRENT_EXAM_KEY}`, sheetId);
+
+        // บันทึกลง Local Server (ถ้าเปิดใช้งาน)
+        try {
+            await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ examType: CURRENT_EXAM_KEY, sheetUrl: rawVal, sheetId: sheetId })
+            });
+        } catch (e) {}
+
+        updateSheetDisplay(rawVal, sheetId);
+        showCopyAlert(`✅ บันทึกลิงก์ Google Sheets เรียบร้อยแล้ว!<br><span style="font-size:0.85em; font-weight:normal;">Sheet ID: <strong>${sheetId}</strong></span>`, '#ecfdf5', '#065f46', '#a7f3d0');
+    }
+
+    async function loadTeacherSettings() {
+        let savedUrl = localStorage.getItem(`sheet_url_${CURRENT_EXAM_KEY}`) || '';
+        let savedId = localStorage.getItem(`sheet_id_${CURRENT_EXAM_KEY}`) || '';
+
+        try {
+            const res = await fetch('/api/settings');
+            if (res.ok) {
+                const allSettings = await res.json();
+                if (allSettings[CURRENT_EXAM_KEY]) {
+                    savedUrl = allSettings[CURRENT_EXAM_KEY].sheetUrl || savedUrl;
+                    savedId = allSettings[CURRENT_EXAM_KEY].sheetId || savedId;
+                }
+            }
+        } catch (e) {}
+
+        const input = document.getElementById('teacherSheetUrl');
+        if (input && savedUrl) {
+            input.value = savedUrl;
+        }
+        updateSheetDisplay(savedUrl, savedId);
+    }
+
+    function showCopyAlert(msg, bg, color, border) {
+        const el = document.getElementById('copyAlert');
+        if (!el) return;
+        el.style.display = 'block';
+        el.style.backgroundColor = bg;
+        el.style.color = color;
+        el.style.border = `1px solid ${border}`;
+        el.innerHTML = msg;
+        setTimeout(() => { el.style.display = 'none'; }, 4500);
+    }
+
+    async function copyCodeGsWithSheetId() {
+        const inputVal = document.getElementById('teacherSheetUrl') ? document.getElementById('teacherSheetUrl').value.trim() : '';
+        const sheetId = extractSheetId(inputVal) || localStorage.getItem(`sheet_id_${CURRENT_EXAM_KEY}`) || '';
+        let codeText = '';
+        
+        try {
+            const res = await fetch(`/api/code?exam=${CURRENT_EXAM_KEY}${sheetId ? '&sheetId=' + encodeURIComponent(sheetId) : ''}`);
+            if (res.ok) {
+                codeText = await res.text();
+            }
+        } catch (e) {}
+
+        if (!codeText) {
+            try {
+                const res2 = await fetch(`Code.gs`);
+                if (res2.ok) {
+                    codeText = await res2.text();
+                }
+            } catch (e2) {}
+        }
+
+        if (!codeText) {
+            alert('ไม่สามารถโหลดไฟล์ Code.gs ได้');
+            return;
+        }
+
+        if (sheetId) {
+            codeText = codeText.replace(/const\s+SPREADSHEET_ID\s*=\s*["'][^"']*["'];?/, `const SPREADSHEET_ID = "${sheetId}";`);
+        }
+
+        navigator.clipboard.writeText(codeText).then(() => {
+            const idNote = sheetId ? `(พร้อมใส่ Sheet ID: ${sheetId})` : '(ยังไม่ได้ระบุ Sheet ID)';
+            showCopyAlert(`📋 คัดลอก Code.gs เรียบร้อยแล้ว! ${idNote}<br><span style="font-size:0.85em; font-weight:normal;">นำไปวางใน Google Apps Script Editor แทนที่โค้ดเดิมได้ทันที</span>`, '#ecfdf5', '#065f46', '#a7f3d0');
+        }).catch(err => {
+            alert('เกิดข้อผิดพลาดในการคัดลอก: ' + err);
+        });
+    }
+
+    async function copyIndexHtmlCode() {
+        let htmlText = '';
+        try {
+            const res = await fetch('Index.html');
+            if (res.ok) {
+                htmlText = await res.text();
+            }
+        } catch (e) {}
+
+        if (!htmlText) {
+            htmlText = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+        }
+
+        navigator.clipboard.writeText(htmlText).then(() => {
+            showCopyAlert(`📄 คัดลอก Index.html เรียบร้อยแล้ว!<br><span style="font-size:0.85em; font-weight:normal;">สร้างไฟล์ Index.html ใน Apps Script แล้วนำไปวางได้ทันที</span>`, '#eef2ff', '#3730a3', '#c7d2fe');
+        }).catch(err => {
+            alert('เกิดข้อผิดพลาดในการคัดลอก: ' + err);
+        });
+    }
+
+    // เรียกโหลดการตั้งค่าทันที
+    if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', loadTeacherSettings);
+    } else {
+        loadTeacherSettings();
+    }
+</script>
+</body>
+</html>
