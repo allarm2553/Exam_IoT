@@ -79,6 +79,26 @@ QUIZ_ANSWER_KEYS = {
             'q_13': 'dht.readTemperature();',
             'q_14': 'isnan()'
         }
+    },
+    'exam_analogpin_analogsensor': {
+        'title': 'แบบทดสอบเรื่อง Analog Pin, ADC, Sensors และการแปลงสัญญาณอนาล็อก',
+        'keys': {
+            'q_0': 'แปลงสัญญาณแรงดันอนาล็อกเป็นค่าตัวเลขดิจิทัลที่ไมโครคอนโทรลเลอร์ประมวลผลได้',
+            'q_1': '12-bit (อ่านค่าได้ 0 - 4095)',
+            'q_2': '1 พิน (พิน A0) ความละเอียด 10-bit (0 - 1023)',
+            'q_3': 'analogRead(pin)',
+            'q_4': 'ไม่สามารถใช้งานอ่านค่า ADCได้ เมื่อมีการเปิดใช้งาน Wi-Fi',
+            'q_5': 'เทียบสัดส่วนแปลงค่า val จากช่วง 0-4095 ให้เป็นช่วงเปอร์เซ็นต์ 0-100',
+            'q_6': 'map(val, 0, 1023, 0, 100)',
+            'q_7': 'เมื่อความเข้มแสงสูงขึ้น ค่าความต้านทานจะลดลง ส่งผลให้แรงดันเอาต์พุตในวงจรแบ่งแรงดันเปลี่ยนแปลง',
+            'q_8': 'วัดความต้านทานไฟฟ้า (Resistance) ระหว่างแท่งโลหะผ่านน้ำและแร่ธาตุในดิน',
+            'q_9': 'เกิดการกัดกร่อนของแท่งโลหะ (Corrosion) จากปฏิกิริยาอิเล็กโทรลิซิสเมื่อมีกระแสไหลผ่าน',
+            'q_10': 'วงจรและแผ่นอิเล็กโทรดถูกเคลือบฉนวน ไม่สัมผัสเนื้อดินและน้ำโดยตรง จึงทนต่อการกัดกร่อน',
+            'q_11': 'ให้ระดับแรงดันไฟฟ้าเปลี่ยนแปลงต่อเนื่องตามระดับความเข้มข้นของก๊าซที่ตรวจจับได้',
+            'q_12': 'ค่าแรงดันไฟ/ค่า ADC มักจะลดต่ำลง (หรือเข้าใกล้ 0) เนื่องจากดินมีความต้านทานต่ำลง',
+            'q_13': 'Vin = (adcValue / 4095.0) * 3.3',
+            'q_14': 'อ่านค่าจาก ADC หลายๆ ครั้งติดต่อกันแล้วนำมาหาค่าเฉลี่ย (Averaging / Oversampling)'
+        }
     }
 }
 
@@ -294,6 +314,8 @@ class ExamRequestHandler(BaseHTTPRequestHandler):
             rel_path = os.path.join('exam_websocket', 'Index.html')
         elif path in ('/exam_digitalpin_digitalsensor', '/exam_digitalpin_digitalsensor/'):
             rel_path = os.path.join('exam_digitalpin_digitalsensor', 'Index.html')
+        elif path in ('/exam_analogpin_analogsensor', '/exam_analogpin_analogsensor/'):
+            rel_path = os.path.join('exam_analogpin_analogsensor', 'Index.html')
         else:
             rel_path = path.lstrip('/')
 

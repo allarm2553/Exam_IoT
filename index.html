@@ -614,14 +614,14 @@
             <div class="stat-card">
                 <div class="stat-icon" style="background: rgba(56, 189, 248, 0.15); color: var(--accent-blue);">📚</div>
                 <div>
-                    <div class="stat-val">3 ชุด</div>
+                    <div class="stat-val">4 ชุด</div>
                     <div class="stat-lbl">แบบทดสอบที่พร้อมสอบ</div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo);">🎯</div>
                 <div>
-                    <div class="stat-val">45 ข้อ</div>
+                    <div class="stat-val">60 ข้อ</div>
                     <div class="stat-lbl">คำถามมาตรฐานทั้งหมด</div>
                 </div>
             </div>
@@ -743,6 +743,38 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Exam 4: Analog Pin, ADC, Sensors -->
+                <div class="exam-card">
+                    <div>
+                        <div class="card-header">
+                            <span class="exam-badge" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border-color: rgba(245, 158, 11, 0.3);">โมดูลที่ 4: อนาล็อก & ADC</span>
+                            <span style="font-size: 1.8rem;">🎛️</span>
+                        </div>
+                        <h3 class="exam-title">Analog Pin, ADC & Sensors</h3>
+                        <p class="exam-desc">
+                            ทดสอบการแปลงสัญญาณอนาล็อกเป็นดิจิทัล (ADC 12-bit บน ESP32 / 10-bit บน ESP8266), ข้อจำกัดพิน ADC2 ร่วมกับ Wi-Fi, ฟังก์ชัน map(), เซนเซอร์ LDR, ความชื้นในดิน Resistive (YL-69) vs Capacitive, และเซนเซอร์ก๊าซ MQ Series
+                        </p>
+                        <div class="topic-tags">
+                            <span class="topic-tag">15 ข้อ (15 คะแนน)</span>
+                            <span class="topic-tag">ADC 12-bit (0-4095)</span>
+                            <span class="topic-tag">analogRead()</span>
+                            <span class="topic-tag">map() function</span>
+                            <span class="topic-tag">LDR & Voltage Divider</span>
+                            <span class="topic-tag">Capacitive Moisture & MQ</span>
+                        </div>
+                    </div>
+                    <div class="exam-footer" style="flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 10px; width: 100%;">
+                            <a href="/exam_analogpin_analogsensor/" class="btn btn-primary" target="_blank" style="flex: 1; background: linear-gradient(135deg, #d97706, #f59e0b);">
+                                <span>🚀 เริ่มทำแบบทดสอบ</span>
+                            </a>
+                            <button class="btn btn-secondary" onclick="openTeacherModal('exam_analogpin_analogsensor')" style="background: rgba(245, 158, 11, 0.12); color: #fcd34d; border-color: rgba(245, 158, 11, 0.35);">
+                                <span>👨‍🏫 จัดการสำหรับครู (Sheet & โค้ด)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -764,6 +796,7 @@
                         <option value="exam_wifi">แบบทดสอบ: Wi-Fi</option>
                         <option value="exam_websocket">แบบทดสอบ: WebSocket</option>
                         <option value="exam_digitalpin_digitalsensor">แบบทดสอบ: Digital Pin & Sensor</option>
+                        <option value="exam_analogpin_analogsensor">แบบทดสอบ: Analog Pin & ADC</option>
                     </select>
                 </div>
 
@@ -1019,7 +1052,9 @@
                 ? 'แบบทดสอบ: การใช้งาน Wi-Fi บน ESP32' 
                 : examKey === 'exam_websocket'
                 ? 'แบบทดสอบ: ESP32 Web Server & WebSocket'
-                : 'แบบทดสอบ: Digital Pin, Switch, Relay และ DHT Sensor';
+                : examKey === 'exam_digitalpin_digitalsensor'
+                ? 'แบบทดสอบ: Digital Pin, Switch, Relay และ DHT Sensor'
+                : 'แบบทดสอบ: Analog Pin, ADC, Sensors และการแปลงสัญญาณอนาล็อก';
 
             modal.style.display = 'flex';
             switchModalTab('code');

@@ -18,6 +18,8 @@
         examType = 'exam_wifi';
     } else if (path.indexOf('digital') !== -1) {
         examType = 'exam_digitalpin_digitalsensor';
+    } else if (path.indexOf('analog') !== -1) {
+        examType = 'exam_analogpin_analogsensor';
     }
 
     function LocalScriptRunner() {

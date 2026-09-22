@@ -18,6 +18,10 @@
    - จำนวน: 15 ข้อ (15 คะแนน)
    - ครอบคลุมเนื้อหา: คำสั่ง `pinMode(GPIO, OUTPUT/INPUT_PULLUP)`, ขาที่เป็น Input-only บน ESP32 (GPIO 34, 35, 36, 39), ขาที่ต่อ SPI Flash ภายในชิป (GPIO 6-11), คำสั่ง `digitalRead()`, วงจร Active-Low สวิตช์ปุ่มกด, ตัวต้านทาน Pull-up (10kΩ), หน้าสัมผัสรีเลย์ COM, NO, NC, การควบคุมโหลดไฟฟ้ากำลังสูง, วงจร Optocoupler ป้องกันสัญญาณรบกวน, ความแตกต่างระหว่าง DHT11 และ DHT22, คำสั่ง `dht.readTemperature()`, และการตรวจสอบค่า Sensor ด้วยฟังก์ชัน `isnan()`
 
+4. **แบบทดสอบ: Analog Pin, ADC, Sensors และการแปลงสัญญาณอนาล็อก (`/exam_analogpin_analogsensor`)**
+   - จำนวน: 15 ข้อ (15 คะแนน)
+   - ครอบคลุมเนื้อหา: หน้าที่ของวงจร ADC, ความละเอียดเริ่มต้น 12-bit (0-4095) บน ESP32 เทียบกับ 10-bit (0-1023 พิน A0) บน ESP8266, คำสั่ง `analogRead()`, ข้อจำกัดพิน ADC2 เมื่อเปิดใช้ Wi-Fi, ฟังก์ชัน `map()`, เซนเซอร์แสง LDR กับวงจรแบ่งแรงดัน (Voltage Divider), เซนเซอร์วัดความชื้นในดิน Resistive (YL-69) กับปัญหาการกัดกร่อนจาก Electrolysis เทียบกับแบบ Capacitive, พิน AO ของเซนเซอร์ก๊าซ MQ Series, การแปลงค่า ADC เป็นโวลต์จริง (Vin = (adcValue/4095.0)*3.3), และการลด Noise ด้วย Signal Averaging / Oversampling
+
 ---
 
 ## 🛡️ มาตรฐานความปลอดภัย 6 ชั้น (6-Layer Anti-Cheat)
@@ -72,5 +76,6 @@ Exam_IoT/
 │   └── settings.json
 ├── exam_wifi/            # ชุดข้อสอบ Wi-Fi บน ESP32 (Index.html, Code.gs)
 ├── exam_websocket/       # ชุดข้อสอบ ESP32 Web Server & WebSocket (Index.html, Code.gs)
-└── exam_digitalpin_digitalsensor/ # ชุดข้อสอบ Digital Pin, Switch, Relay และ DHT Sensor (Index.html, Code.gs)
+├── exam_digitalpin_digitalsensor/ # ชุดข้อสอบ Digital Pin, Switch, Relay และ DHT Sensor (Index.html, Code.gs)
+└── exam_analogpin_analogsensor/   # ชุดข้อสอบ Analog Pin, ADC, Sensors และการแปลงสัญญาณ (Index.html, Code.gs)
 ```

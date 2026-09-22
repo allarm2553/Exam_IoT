@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>แบบทดสอบ: Analog Pin, ADC, Sensors และการแปลงสัญญาณอนาล็อก</title>
+    <!-- รองรับทั้ง Google Apps Script และ Local Server -->
+    <script src="/local-adapter.js"></script>
+    <style>
+        * {
+            -webkit-touch-callout: none !important; /* ปิดเมนูคัดลอก/แชร์บนมือถือ iOS & Android */
+        }
+        body { 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            padding: 20px; 
+            background-color: #f0f2f5; 
+            color: #333; 
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none; /* ห้ามคลุมดำ/คัดลอกข้อความ */
+            touch-action: pan-y; /* ให้เลื่อนจอได้ แต่ปิด gesture ลัด */
+        }
+        input, textarea {
+            -webkit-touch-callout: default !important;
+            -webkit-user-select: auto !important;
+            user-select: auto !important; /* ให้พิมพ์ข้อมูลในกล่องข้อความได้ตามปกติ */
+        }
+        
+        /* ลายน้ำรักษาความปลอดภัยแบบไดนามิกระบุตัวตนผู้สอบ (Forensic Watermark) */
+        #watermarkOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.12;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-auto-rows: 140px;
+            overflow: hidden;
+        }
+        .watermark-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(-25deg);
+            font-size: 12px;
+            font-weight: 800;
+            color: #111;
+            text-align: center;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        /* ซ่อนเนื้อหาทั้งหมดเมื่อมีการสั่งพิมพ์ (Ctrl+P หรือ Save as PDF) */
+        @media print {
+            body { display: none !important; }
+        }
+
+        /* ม่านป้องกันการแคปหน้าจอเมื่อหน้าต่างหลุดโฟกัส (เช่น กด Win+Shift+S หรือเปิด Snipping Tool) */
+        #captureShield {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #0b0c10;
+            z-index: 9998;
+            color: white;
+            text-align: center;
+            padding-top: 18%;
+        }
+        .form-container { max-width: 650px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { color: #d97706; border-bottom: 2px solid #d97706; padding-bottom: 10px; margin-top: 0; }
+        .question-block { background: #f8f9fa; padding: 20px; margin-bottom: 20px; border-radius: 8px; border-left: 5px solid #d97706; }
+        .question-title { font-weight: bold; margin-bottom: 12px; font-size: 1.1em; line-height: 1.5; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+        .info-group { margin-bottom: 10px; }
+        .info-group-full { grid-column: span 2; }
+        .info-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.95em; color: #555; }
+        
+        .option-item { margin: 10px 0; display: flex; align-items: center; }
+        .option-item input { margin-right: 12px; cursor: pointer; transform: scale(1.2); }
+        .option-item label { cursor: pointer; width: 100%; font-size: 1em; }
+        .submit-btn { background-color: #d97706; color: white; padding: 14px 24px; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; width: 100%; font-weight: bold; transition: background 0.3s; margin-top: 10px; }
+        .submit-btn:hover { background-color: #b45309; }
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+
+        /* หน้าจอล็อกฉากหลังมืดทึบ */
+        #lockScreen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.96);
+            z-index: 9999;
+            color: white;
+            text-align: center;
+            padding-top: 15%;
+        }
+        .lock-box { max-width: 500px; margin: 0 auto; padding: 35px; background: #222; border: 2px solid #ff3b30; border-radius: 12px; }
+        .refresh-btn { background-color: #ff3b30; color: white; padding: 15px 30px; border: none; border-radius: 6px; font-size: 1em; cursor: pointer; margin-top: 25px; font-weight: bold; }
+        .refresh-btn:hover { background-color: #d32f2f; }
+
+        /* ส่วนสำหรับครูผู้สอน */
+        .teacher-panel {
+            max-width: 650px;
+            margin: 0 auto 20px auto;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .teacher-panel h3 {
+            margin: 0 0 12px 0;
+            color: #b45309;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sheet-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .sheet-input-group input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            font-size: 0.92em;
+        }
+        .save-sheet-btn {
+            background-color: #d97706;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.92em;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .save-sheet-btn:hover {
+            background-color: #b45309;
+        }
+        .portal-nav-btn {
+            display: inline-block;
+            margin-bottom: 16px;
+            color: #b45309;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.92em;
+        }
+        .portal-nav-btn:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+<!-- เลเยอร์ลายน้ำ Forensic Watermark -->
+<div id="watermarkOverlay"></div>
+
+<!-- หน้าต่างม่านดำบังข้อมูล (Anti-Snipping & Focus Protection Shield) -->
+<div id="captureShield">
+    <div style="max-width: 480px; margin: 0 auto; padding: 25px; background: #16181f; border-radius: 12px; border: 1px solid #333;">
+        <h2 style="color: #ffcc00; border: none; margin-bottom: 10px;">⚠️ ระบบความปลอดภัย</h2>
+        <p style="font-size: 1.1em; line-height: 1.6;">หน้าต่างแบบทดสอบหลุดโฟกัส หรือมีการเรียกใช้งานโปรแกรมจับภาพหน้าจอ</p>
+        <p style="color: #bbb; font-size: 0.95em;">กรุณาคลิกกลับเข้ามาที่หน้านี้เพื่อทำข้อสอบต่อ</p>
+    </div>
+</div>
+
+<!-- หน้าจอล็อกถาวรเมื่อทำผิดกฎ 3 ครั้ง -->
+<div id="lockScreen">
+    <div class="lock-box">
+        <h2 style="color: #ff3b30; border: none;">🚫 ข้อสอบถูกระงับ</h2>
+        <p style="font-size: 1.1em; line-height: 1.6;">ระบบตรวจพบการสลับหน้าจอ ออกจากแอป หรือพยายามคัดลอก/แคปเจอร์หน้าจอเกินโควตาที่กำหนด</p>
+        <p style="color: #aaa; margin-top: 10px;">พฤติกรรมนี้ถูกบันทึกประวัติการสอบเข้าสู่ระบบเรียบร้อยแล้ว</p>
+        <button class="refresh-btn" onclick="window.location.reload()">ลองโหลดหน้าใหม่อีกครั้ง</button>
+    </div>
+</div>
+
+<div style="max-width: 650px; margin: 0 auto;">
+    <a href="../" class="portal-nav-btn">← กลับหน้ารวมแบบทดสอบ (Dashboard)</a>
+</div>
+
+<!-- ส่วนจัดการสำหรับครูผู้สอน (Google Sheets & Source Code) -->
+<div class="teacher-panel">
+    <h3>👨‍🏫 จัดการแบบทดสอบสำหรับครูผู้สอน (Google Sheets & Script)</h3>
+    <p style="margin: 0 0 10px 0; font-size: 0.88em; color: #78350f;">
+        วางลิงก์ Google Sheets ของคุณ เพื่อใช้เป็นฐานข้อมูลบันทึกคะแนนและประวัติการสอบ:
+    </p>
+    
+    <div class="sheet-input-group">
+        <input type="text" id="teacherSheetUrl" placeholder="วาง URL ของ Google Sheets ที่นี่..." value="">
+        <button type="button" class="save-sheet-btn" onclick="saveTeacherSheetUrl()">💾 เซฟลิงก์</button>
+    </div>
+    
+    <div id="sheetStatusInfo" style="font-size: 0.86em; color: #4b5563; margin-bottom: 8px;">
+        <span id="sheetIdBadge" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; font-family: monospace;">ยังไม่ได้ระบุ Sheet ID</span>
+        <div style="margin-top: 6px;">
+            <a id="sheetExternalLink" href="#" target="_blank" style="display: none; color: #d97706; text-decoration: none; font-weight: bold;">↗️ เปิด Google Sheets ของคุณ</a>
+        </div>
+    </div>
+
+    <!-- ปุ่มคัดลอกโค้ด Code.gs ที่ดึง Sheet ID อัตโนมัติ และปุ่มคัดลอก Index.html -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px;">
+        <button type="button" onclick="copyCodeGsWithSheetId()" style="background: #059669; color: white; border: none; padding: 12px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 6px rgba(5,150,105,0.25); font-size: 0.92em;">
+            <span>📋 คัดลอก Code.gs (ใส่ Sheet ID แล้ว)</span>
+        </button>
+        <button type="button" onclick="copyIndexHtmlCode()" style="background: #d97706; color: white; border: none; padding: 12px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 6px rgba(217,119,6,0.25); font-size: 0.92em;">
+            <span>📄 คัดลอก Index.html</span>
+        </button>
+    </div>
+
+    <div id="copyAlert" style="display: none; margin-top: 12px; padding: 10px; border-radius: 6px; font-size: 0.9em; font-weight: bold; text-align: center;"></div>
+</div>
+
+<div class="form-container">
+    <h2>แบบทดสอบ: Analog Pin, ADC, Sensors และการแปลงสัญญาณอนาล็อก</h2>
+    
+    <form action="" method="POST" id="quizForm">
+        
+        <!-- ส่วนข้อมูลผู้กรอกส่วนตัวก่อนเริ่มทำโจทย์ -->
+        <div class="question-block" style="border-left: 5px solid #d97706;">
+            <div class="question-title" style="color: #d97706; margin-bottom: 15px;">📝 ข้อมูลผู้เข้าสอบ</div>
+            <div class="info-grid">
+                <div class="info-group">
+                    <label for="studentIdInput">เลขประจำตัว (ID)</label>
+                    <input type="text" name="studentId" id="studentIdInput" required placeholder="เช่น 64XXXXXX">
+                    <div id="idStatusMsg" style="font-size: 0.85em; margin-top: 5px; font-weight: bold; display: none;"></div>
+                </div>
+                <div class="info-group">
+                    <label for="studentRoomInput">ห้องเรียน / กลุ่ม</label>
+                    <input type="text" name="studentRoom" id="studentRoomInput" required placeholder="เช่น ม.6/1 หรือ Sec 2">
+                </div>
+                <div class="info-group info-group-full">
+                    <label for="studentNameInput">ชื่อ - นามสกุลจริง</label>
+                    <input type="text" name="studentName" id="studentNameInput" required placeholder="นาย / นางสาว...">
+                </div>
+            </div>
+        </div>
+
+        <!-- กล่องสำหรับดึงข้อสอบสุ่มเรียงลำดับคำถาม -->
+        <div id="questionsContainer"></div>
+
+        <button type="submit" class="submit-btn">ส่งคำตอบ</button>
+    </form>
+</div>
+
+<script>
+    // ข้อมูลข้อสอบ 15 ข้อต้นแบบ
+    const quizData = [
+        {
+            q: "ADC (Analog-to-Digital Converter) มีหน้าที่สำคัญอย่างไรในระบบไมโครคอนโทรลเลอร์?",
+            c: [
+                "แปลงสัญญาณดิจิทัลเป็นสัญญาณอนาล็อกเพื่อขับลำโพง",
+                "แปลงสัญญาณแรงดันอนาล็อกเป็นค่าตัวเลขดิจิทัลที่ไมโครคอนโทรลเลอร์ประมวลผลได้",
+                "เพิ่มแรงดันไฟฟ้าให้กับพินอนาล็อกเพื่อป้องกันสัญญาณรบกวน",
+                "แปลงสัญญาณกระแสสลับ (AC) ให้เป็นกระแสตรง (DC)"
+            ],
+            qKey: "q_0"
+        },
+        {
+            q: "ค่าความละเอียด (Resolution) ของ ADC บน ESP32 แบบค่าเริ่มต้น (Default) คือเท่าใด และอ่านค่าได้ในช่วงใด?",
+            c: [
+                "10-bit (อ่านค่าได้ 0 - 1023)",
+                "12-bit (อ่านค่าได้ 0 - 4095)",
+                "8-bit (อ่านค่าได้ 0 - 255)",
+                "16-bit (อ่านค่าได้ 0 - 65535)"
+            ],
+            qKey: "q_1"
+        },
+        {
+            q: "บอร์ดไมโครคอนโทรลเลอร์ ESP8266 มีพินสำหรับอ่านสัญญาณอนาล็อก (ADC) กี่พิน และมีความละเอียดเท่าใด?",
+            c: [
+                "1 พิน (พิน A0) ความละเอียด 10-bit (0 - 1023)",
+                "2 พิน (A0, A1) ความละเอียด 12-bit (0 - 4095)",
+                "16 พิน ความละเอียด 12-bit (0 - 4095)",
+                "8 พิน ความละเอียด 8-bit (0 - 255)"
+            ],
+            qKey: "q_2"
+        },
+        {
+            q: "ฟังก์ชันมาตรฐานใน Arduino IDE ที่ใช้สำหรับอ่านค่าแรงดันอนาล็อกจากพินที่กำหนดคือฟังก์ชันใด?",
+            c: [
+                "digitalRead(pin)",
+                "analogWrite(pin, value)",
+                "analogRead(pin)",
+                "adcRead(pin)"
+            ],
+            qKey: "q_3"
+        },
+        {
+            q: "ข้อจำกัดสำคัญในการใช้งานพินกลุ่ม ADC2 บนบอร์ด ESP32 คืออะไร?",
+            c: [
+                "ไม่สามารถอ่านแรงดันไฟฟ้าเกิน 1.0V ได้",
+                "ไม่สามารถใช้งานอ่านค่า ADCได้ เมื่อมีการเปิดใช้งาน Wi-Fi",
+                "สามารถใช้อ่านค่าได้เฉพาะสัญญาณดิจิทัลเท่านั้น",
+                "จะทำให้ชิป ESP32 รีเซ็ตตัวเองทันทีที่เรียกใช้งาน"
+            ],
+            qKey: "q_4"
+        },
+        {
+            q: "ฟังก์ชัน map(val, 0, 4095, 0, 100) มีการทำงานอย่างไร?",
+            c: [
+                "เทียบสัดส่วนแปลงค่า val จากช่วง 0-4095 ให้เป็นช่วงเปอร์เซ็นต์ 0-100",
+                "กรองสัญญาณรบกวนของค่า val ให้คงที่อยู่ที่ 100",
+                "กำหนดความเร็วในการอ่านค่าอนาล็อกให้เท่ากับ 100 ms",
+                "แปลงค่าดิจิทัล 0-100 ให้เป็นแรงดันไฟ 0-4095 mV"
+            ],
+            qKey: "q_5"
+        },
+        {
+            q: "หากต้องการแปลงค่า ADC 10-bit (0 - 1023) ของ ESP8266 ให้เป็นเปอร์เซ็นต์ (0 - 100%) ควรใช้ฟังก์ชัน map() อย่างไร?",
+            c: [
+                "map(val, 0, 100, 0, 1023)",
+                "map(val, 0, 1023, 0, 100)",
+                "map(val, 1023, 0, 100, 0)",
+                "map(val, 0, 4095, 0, 100)"
+            ],
+            qKey: "q_6"
+        },
+        {
+            q: "LDR Sensor (Light Dependent Resistor) มีหลักการทำงานอย่างไรเมื่อความเข้มแสงเปลี่ยนแปลง?",
+            c: [
+                "เมื่อความเข้มแสงสูงขึ้น ค่าความต้านทานจะสูงขึ้นตาม",
+                "เมื่อความเข้มแสงสูงขึ้น ค่าความต้านทานจะลดลง ส่งผลให้แรงดันเอาต์พุตในวงจรแบ่งแรงดันเปลี่ยนแปลง",
+                "สามารถสร้างกระแสไฟฟ้าได้เองตามความเข้มแสงเหมือนโซลาร์เซลล์",
+                "สวิตช์ภายในจะตัดการทำงานทันทีเมื่อไม่มีแสง"
+            ],
+            qKey: "q_7"
+        },
+        {
+            q: "เซนเซอร์วัดความชื้นในดินชนิด YL-69 / HL-69 (Resistive Type) วัดความชื้นโดยใช้วิธีใด?",
+            c: [
+                "วัดการเปลี่ยนแปลงความจุไฟฟ้า (Capacitance) ระหว่างแผ่นอิเล็กโทรด",
+                "วัดความต้านทานไฟฟ้า (Resistance) ระหว่างแท่งโลหะผ่านน้ำและแร่ธาตุในดิน",
+                "วัดการสะท้อนของแสงอินฟราเรดในดิน",
+                "วัดความถี่เสียงสะท้อนผ่านเนื้อดิน"
+            ],
+            qKey: "q_8"
+        },
+        {
+            q: "ข้อเสียสำคัญของเซนเซอร์วัดความชื้นในดินชนิด YL-69 (Resistive Type) เมื่อเปิดใช้งานต่อเนื่องคืออะไร?",
+            c: [
+                "เกิดการกัดกร่อนของแท่งโลหะ (Corrosion) จากปฏิกิริยาอิเล็กโทรลิซิสเมื่อมีกระแสไหลผ่าน",
+                "ใช้พลังงานสูงมากจนบอร์ดไมโครคอนโทรลเลอร์ตัดการทำงาน",
+                "อ่านค่าได้เฉพาะเมื่อดินแห้งสนิทเท่านั้น",
+                "ไม่สามารถส่งสัญญาณออกมาเป็นอนาล็อกได้"
+            ],
+            qKey: "q_9"
+        },
+        {
+            q: "เซนเซอร์วัดความชื้นในดินแบบ Capacitive (Capacitive Soil Moisture Sensor) มีจุดเด่นเหนือกว่าแบบ Resistive อย่างไร?",
+            c: [
+                "ราคาถูกกว่าแบบ Resistive หลายเท่า",
+                "วงจรและแผ่นอิเล็กโทรดถูกเคลือบฉนวน ไม่สัมผัสเนื้อดินและน้ำโดยตรง จึงทนต่อการกัดกร่อน",
+                "ต้องใช้แรงดันไฟเลี้ยงสูงถึง 12V ขึ้นไปเท่านั้น",
+                "ส่งข้อมูลออกเป็นสัญญาณดิจิทัล Bus I2C เท่านั้น"
+            ],
+            qKey: "q_10"
+        },
+        {
+            q: "GAS Sensor (เช่น MQ-2, MQ-135) มักมีพินเอาต์พุต AO (Analog Output) สัญญาณจากพินนี้มีลักษณะอย่างไร?",
+            c: [
+                "ให้ระดับแรงดันไฟฟ้าเปลี่ยนแปลงต่อเนื่องตามระดับความเข้มข้นของก๊าซที่ตรวจจับได้",
+                "ให้สัญญาณสถานะ HIGH (1) หรือ LOW (0) เท่านั้น",
+                "ส่งข้อมูลอนุกรมแบบโปรโตคอล SPI",
+                "ให้ค่าความถี่ของสัญญาณสี่เหลี่ยมเปลี่ยนตามความเข้มข้นก๊าซ"
+            ],
+            qKey: "q_11"
+        },
+        {
+            q: "โดยทั่วไปเมื่อนำเซนเซอร์วัดความชื้นในดินต่อเข้ากับพิน ADC ค่าที่อ่านได้จะมีลักษณะอย่างไรเมื่อดินมีความชื้นสูง (ดินเปียก)?",
+            c: [
+                "ค่าที่อ่านได้จาก ADC จะเพิ่มขึ้นจนสูงสุดเสมอ",
+                "ค่าแรงดันไฟ/ค่า ADC มักจะลดต่ำลง (หรือเข้าใกล้ 0) เนื่องจากดินมีความต้านทานต่ำลง",
+                "ค่า ADC จะเปลี่ยนเป็นค่าติดลบ",
+                "สัญญาณ ADC จะหยุดการตอบสนอง"
+            ],
+            qKey: "q_12"
+        },
+        {
+            q: "หากต้องการคำนวณแปลงค่าดิจิทัลจาก ADC 12-bit (0-4095) ของ ESP32 ให้เป็นค่าแรงดันไฟฟ้าจริง (Vin) ในหน่วยโวลต์ (แรงดันอ้างอิง 3.3V) สมการใดถูกต้อง?",
+            c: [
+                "Vin = (adcValue / 4095.0) * 3.3",
+                "Vin = (adcValue / 3.3) * 4095.0",
+                "Vin = (adcValue / 1023.0) * 5.0",
+                "Vin = adcValue * 3.3"
+            ],
+            qKey: "q_13"
+        },
+        {
+            q: "ในการอ่านค่าอนาล็อกจาก GAS Sensor หรือ LDR Sensor หากพบว่าสัญญาณมีความผันผวนเล็กน้อย (Noise) วิธีทางซอฟต์แวร์เบื้องต้นที่ดีที่สุดในการแก้ปัญหาคืออะไร?",
+            c: [
+                "อ่านค่าจาก ADC หลายๆ ครั้งติดต่อกันแล้วนำมาหาค่าเฉลี่ย (Averaging / Oversampling)",
+                "เพิ่มแรงดันไฟเลี้ยงให้เซนเซอร์เป็น 2 เท่า",
+                "ใส่คำสั่ง delay(10000) ทุกครั้งหลังอ่านค่า",
+                "เปลี่ยนไปใช้ดิจิทัลพินแบบ External Interrupt"
+            ],
+            qKey: "q_14"
+        }
+    ];
+
+    // ฟังก์ชันช่วยสุ่มเรียงลำดับอาร์เรย์ (Fisher-Yates Shuffle)
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    // ทำการสุ่มคำถาม และสุ่มตัวเลือก เพื่อป้องกันการจำตำแหน่ง
+    const container = document.getElementById('questionsContainer');
+    const shuffledQuestions = shuffle([...quizData]);
+
+    shuffledQuestions.forEach((item, index) => {
+        const block = document.createElement('div');
+        block.className = 'question-block';
+
+        // หัวข้อโจทย์ข้อสอบ (ไม่แสดงหมายเลขข้อ เพื่อความปลอดภัย)
+        const title = document.createElement('div');
+        title.className = 'question-title';
+        title.innerText = item.q;
+        block.appendChild(title);
+
+        // ตัวเลือกของข้อสอบ
+        const shuffledChoices = shuffle([...item.c]);
+        shuffledChoices.forEach((choice) => {
+            const optDiv = document.createElement('div');
+            optDiv.className = 'option-item';
+
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = item.qKey;
+            radio.value = choice;
+            radio.required = true;
+            radio.id = `${item.qKey}_${choice.replace(/\s+/g, '_')}`;
+
+            const label = document.createElement('label');
+            label.htmlFor = radio.id;
+            label.innerText = choice;
+
+            optDiv.appendChild(radio);
+            optDiv.appendChild(label);
+            block.appendChild(optDiv);
+        });
+
+        container.appendChild(block);
+    });
+
+    // ==========================================
+    // ตรวจสอบรหัสประจำตัวผู้สอบแบบเรียลไทม์
+    // ==========================================
+    let isStudentValid = true;
+    const studentIdInput = document.getElementById('studentIdInput');
+    const idStatusMsg = document.getElementById('idStatusMsg');
+
+    studentIdInput.addEventListener('blur', function() {
+        const studentId = this.value.trim();
+        if (studentId.length >= 3) {
+            idStatusMsg.style.display = 'block';
+            idStatusMsg.style.color = '#0284c7';
+            idStatusMsg.innerText = '🔄 กำลังตรวจสอบรหัสประจำตัว...';
+
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    if (response && response.submitted) {
+                        isStudentValid = false;
+                        idStatusMsg.style.color = '#dc3545';
+                        idStatusMsg.innerText = '❌ ' + response.message;
+                        alert('⚠️ ' + response.message);
+                    } else {
+                        isStudentValid = true;
+                        idStatusMsg.style.color = '#28a745';
+                        idStatusMsg.innerText = '✅ รหัสนี้สามารถเข้าทำแบบทดสอบได้';
+                    }
+                })
+                .withFailureHandler(function(err) {
+                    isStudentValid = true;
+                    idStatusMsg.style.display = 'none';
+                })
+                .checkStudentSubmitted(studentId);
+        } else {
+            idStatusMsg.style.display = 'none';
+        }
+    });
+
+    // ==========================================
+    // ระบบรักษาความปลอดภัยและป้องกันการทุจริต 6 ชั้น
+    // ==========================================
+    let cheatAttempts = 0;
+    const MAX_ATTEMPTS = 3;
+    const lockScreen = document.getElementById('lockScreen');
+    const captureShield = document.getElementById('captureShield');
+    const watermarkOverlay = document.getElementById('watermarkOverlay');
+
+    // เลเยอร์ลายน้ำ Forensic Watermark
+    function updateWatermark() {
+        const idVal = studentIdInput.value.trim() || "EXAM-ONLINE";
+        const nameVal = document.getElementById('studentNameInput').value.trim() || "ESP32-STUDENT";
+        const markText = `${idVal} • ${nameVal}`;
+
+        watermarkOverlay.innerHTML = '';
+        const count = 35;
+        for (let i = 0; i < count; i++) {
+            const item = document.createElement('div');
+            item.className = 'watermark-item';
+            item.innerText = markText;
+            watermarkOverlay.appendChild(item);
+        }
+    }
+    studentIdInput.addEventListener('input', updateWatermark);
+    document.getElementById('studentNameInput').addEventListener('input', updateWatermark);
+    updateWatermark();
+
+    // บันทึกประวัติและนับครั้งที่ทำผิดกฎ
+    function registerCheatAttempt(actionName) {
+        cheatAttempts++;
+        const studentId = studentIdInput.value.trim();
+        const studentName = document.getElementById('studentNameInput').value.trim();
+        const studentRoom = document.getElementById('studentRoomInput').value.trim();
+
+        // ส่ง Log เข้าระบบ Google Apps Script หรือ Local Server
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run.logBehavior(studentId, studentName, studentRoom, actionName, cheatAttempts);
+        }
+
+        if (cheatAttempts >= MAX_ATTEMPTS) {
+            lockScreen.style.display = 'block';
+            captureShield.style.display = 'none';
+            document.body.style.overflow = 'hidden';
+            window.onbeforeunload = null;
+        } else {
+            alert(`⚠️ คำเตือนความปลอดภัย (${cheatAttempts}/${MAX_ATTEMPTS})\nระบบตรวจพบ: ${actionName}\nหากทำผิดครบ ${MAX_ATTEMPTS} ครั้ง ระบบจะระงับการสอบทันที!`);
+        }
+    }
+
+    // 1. ดักจับการสลับหน้าจอ (Visibility Change)
+    document.addEventListener("visibilitychange", function() {
+        if (document.hidden) {
+            captureShield.style.display = "block";
+            registerCheatAttempt("สลับหน้าต่างหรือสลับแอป (Tab Switch)");
+        } else {
+            setTimeout(() => {
+                if (cheatAttempts < MAX_ATTEMPTS) {
+                    captureShield.style.display = "none";
+                }
+            }, 300);
+        }
+    });
+
+    // 2. ดักจับเมื่อหน้าต่างหลุดโฟกัส (Window Blur)
+    window.addEventListener("blur", function() {
+        captureShield.style.display = "block";
+        setTimeout(() => {
+            if (cheatAttempts < MAX_ATTEMPTS && document.hasFocus()) {
+                captureShield.style.display = "none";
+            }
+        }, 500);
+    });
+
+    window.addEventListener("focus", function() {
+        if (cheatAttempts < MAX_ATTEMPTS) {
+            captureShield.style.display = "none";
+        }
+    });
+
+    // 3. ดักจับคีย์ลัด PrintScreen, F12, Ctrl+P, Ctrl+S, Ctrl+Shift+S (Snipping Tool)
+    window.addEventListener("keydown", function(e) {
+        if (e.key === "PrintScreen" || e.keyCode === 44) {
+            e.preventDefault();
+            captureShield.style.display = "block";
+            navigator.clipboard.writeText("ไม่อนุญาตให้จับภาพหน้าจอข้อสอบ").catch(() => {});
+            registerCheatAttempt("กดปุ่ม PrintScreen บันทึกภาพหน้าจอ");
+            setTimeout(() => {
+                if (cheatAttempts < MAX_ATTEMPTS) captureShield.style.display = "none";
+            }, 1000);
+            return false;
+        }
+
+        if (e.key === "F12" || 
+            (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "i" || e.key === "C" || e.key === "c" || e.key === "J" || e.key === "j")) ||
+            (e.ctrlKey && (e.key === "U" || e.key === "u")) ||
+            (e.ctrlKey && (e.key === "P" || e.key === "p")) ||
+            (e.ctrlKey && (e.key === "S" || e.key === "s")) ||
+            (e.ctrlKey && e.shiftKey && (e.key === "S" || e.key === "s"))) {
+            e.preventDefault();
+            registerCheatAttempt(`พยายามใช้คีย์ลัดต้องห้าม (${e.key})`);
+            return false;
+        }
+    });
+
+    // 4. บล็อกคลิกขวา
+    document.addEventListener("contextmenu", function(e) {
+        e.preventDefault();
+        return false;
+    });
+
+    // 5. ป้องกันการลากคลุมข้อความ
+    document.addEventListener("selectstart", function(e) {
+        if (e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // 6. เตือนก่อนปิดหรือรีเฟรชหน้าเว็บ
+    window.onbeforeunload = function() {
+        return "คุณกำลังทำแบบทดสอบอยู่ หากออกจากหน้านี้คำตอบของคุณจะไม่ถูกบันทึก ยืนยันหรือไม่?";
+    };
+
+    // ปลดล็อกการเตือนเมื่อกดส่งฟอร์มอย่างถูกต้อง
+    document.getElementById('quizForm').addEventListener('submit', function(e) {
+        if (!isStudentValid) {
+            e.preventDefault();
+            alert('❌ รหัสประจำตัวนี้เคยส่งแบบทดสอบไปแล้ว ไม่อนุญาตให้ส่งซ้ำ');
+            return false;
+        }
+        window.onbeforeunload = null;
+    });
+
+    // ==========================================
+    // ระบบจัดการสำหรับครูผู้สอน (Google Sheets & Code Copy)
+    // ==========================================
+    const CURRENT_EXAM_KEY = 'exam_analogpin_analogsensor';
+
+    function extractSheetId(url) {
+        if (!url) return '';
+        const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        if (match && match[1]) {
+            return match[1];
+        }
+        if (/^[a-zA-Z0-9-_]{20,60}$/.test(url.trim())) {
+            return url.trim();
+        }
+        return '';
+    }
+
+    function updateSheetDisplay(url, sheetId) {
+        const badge = document.getElementById('sheetIdBadge');
+        const link = document.getElementById('sheetExternalLink');
+        if (sheetId) {
+            badge.innerText = `Sheet ID: ${sheetId}`;
+            badge.style.background = '#d1fae5';
+            badge.style.color = '#065f46';
+            if (link) {
+                link.href = `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
+                link.style.display = 'inline';
+            }
+        } else {
+            badge.innerText = 'ยังไม่ได้ระบุ Sheet ID';
+            badge.style.background = '#fef3c7';
+            badge.style.color = '#92400e';
+            if (link) link.style.display = 'none';
+        }
+    }
+
+    async function saveTeacherSheetUrl() {
+        const input = document.getElementById('teacherSheetUrl');
+        const rawVal = input ? input.value.trim() : '';
+        const sheetId = extractSheetId(rawVal);
+        
+        if (!rawVal) {
+            alert('กรุณากรอกลิงก์หรือ ID ของ Google Sheets');
+            return;
+        }
+
+        if (!sheetId) {
+            alert('❌ รูปแบบลิงก์ Google Sheets ไม่ถูกต้อง กรุณาคัดลอก URL จากแอดเดรสบาร์ของเบราว์เซอร์');
+            return;
+        }
+
+        // บันทึกลง localStorage
+        localStorage.setItem(`sheet_url_${CURRENT_EXAM_KEY}`, rawVal);
+        localStorage.setItem(`sheet_id_${CURRENT_EXAM_KEY}`, sheetId);
+
+        // บันทึกลง Local Server (ถ้าเปิดใช้งาน)
+        try {
+            await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ examType: CURRENT_EXAM_KEY, sheetUrl: rawVal, sheetId: sheetId })
+            });
+        } catch (e) {}
+
+        updateSheetDisplay(rawVal, sheetId);
+        showCopyAlert(`✅ บันทึกลิงก์ Google Sheets เรียบร้อยแล้ว!<br><span style="font-size:0.85em; font-weight:normal;">Sheet ID: <strong>${sheetId}</strong></span>`, '#ecfdf5', '#065f46', '#a7f3d0');
+    }
+
+    async function loadTeacherSettings() {
+        let savedUrl = localStorage.getItem(`sheet_url_${CURRENT_EXAM_KEY}`) || '';
+        let savedId = localStorage.getItem(`sheet_id_${CURRENT_EXAM_KEY}`) || '';
+
+        try {
+            const res = await fetch('/api/settings');
+            if (res.ok) {
+                const allSettings = await res.json();
+                if (allSettings[CURRENT_EXAM_KEY]) {
+                    savedUrl = allSettings[CURRENT_EXAM_KEY].sheetUrl || savedUrl;
+                    savedId = allSettings[CURRENT_EXAM_KEY].sheetId || savedId;
+                }
+            }
+        } catch (e) {}
+
+        const input = document.getElementById('teacherSheetUrl');
+        if (input && savedUrl) {
+            input.value = savedUrl;
+        }
+        updateSheetDisplay(savedUrl, savedId);
+    }
+
+    function showCopyAlert(msg, bg, color, border) {
+        const el = document.getElementById('copyAlert');
+        if (!el) return;
+        el.style.display = 'block';
+        el.style.backgroundColor = bg;
+        el.style.color = color;
+        el.style.border = `1px solid ${border}`;
+        el.innerHTML = msg;
+        setTimeout(() => { el.style.display = 'none'; }, 4500);
+    }
+
+    async function copyCodeGsWithSheetId() {
+        const inputVal = document.getElementById('teacherSheetUrl') ? document.getElementById('teacherSheetUrl').value.trim() : '';
+        const sheetId = extractSheetId(inputVal) || localStorage.getItem(`sheet_id_${CURRENT_EXAM_KEY}`) || '';
+        let codeText = '';
+        
+        try {
+            const res = await fetch(`/api/code?exam=${CURRENT_EXAM_KEY}${sheetId ? '&sheetId=' + encodeURIComponent(sheetId) : ''}`);
+            if (res.ok) {
+                codeText = await res.text();
+            }
+        } catch (e) {}
+
+        if (!codeText) {
+            try {
+                const res2 = await fetch(`Code.gs`);
+                if (res2.ok) {
+                    codeText = await res2.text();
+                }
+            } catch (e2) {}
+        }
+
+        if (!codeText) {
+            alert('ไม่สามารถโหลดไฟล์ Code.gs ได้');
+            return;
+        }
+
+        if (sheetId) {
+            codeText = codeText.replace(/const\s+SPREADSHEET_ID\s*=\s*["'][^"']*["'];?/, `const SPREADSHEET_ID = "${sheetId}";`);
+        }
+
+        navigator.clipboard.writeText(codeText).then(() => {
+            const idNote = sheetId ? `(พร้อมใส่ Sheet ID: ${sheetId})` : '(ยังไม่ได้ระบุ Sheet ID)';
+            showCopyAlert(`📋 คัดลอก Code.gs เรียบร้อยแล้ว! ${idNote}<br><span style="font-size:0.85em; font-weight:normal;">นำไปวางใน Google Apps Script Editor แทนที่โค้ดเดิมได้ทันที</span>`, '#ecfdf5', '#065f46', '#a7f3d0');
+        }).catch(err => {
+            alert('เกิดข้อผิดพลาดในการคัดลอก: ' + err);
+        });
+    }
+
+    async function copyIndexHtmlCode() {
+        let htmlText = '';
+        try {
+            const res = await fetch('Index.html');
+            if (res.ok) {
+                htmlText = await res.text();
+            }
+        } catch (e) {}
+
+        if (!htmlText) {
+            htmlText = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+        }
+
+        navigator.clipboard.writeText(htmlText).then(() => {
+            showCopyAlert(`📄 คัดลอก Index.html เรียบร้อยแล้ว!<br><span style="font-size:0.85em; font-weight:normal;">สร้างไฟล์ Index.html ใน Apps Script แล้วนำไปวางได้ทันที</span>`, '#eef2ff', '#3730a3', '#c7d2fe');
+        }).catch(err => {
+            alert('เกิดข้อผิดพลาดในการคัดลอก: ' + err);
+        });
+    }
+
+    // เรียกโหลดการตั้งค่าทันที
+    if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', loadTeacherSettings);
+    } else {
+        loadTeacherSettings();
+    }
+</script>
+</body>
+</html>
