@@ -14,6 +14,10 @@
    - จำนวน: 15 ข้อ (15 คะแนน)
    - ครอบคลุมเนื้อหา: การสื่อสารแบบสองทางพร้อมกัน (Full Duplex Real-Time), ความแตกต่างระหว่าง HTTP Polling และ WebSocket, การเก็บไฟล์ HTML ใน PROGMEM Flash Memory, Library `AsyncTCP.h`, การ Handshake ด้วย HTTP, โปรโตคอล `ws://`, การดักจับ Event `WS_EVT_CONNECT`, พอร์ตมาตรฐาน 80 และการส่งผ่านข้อมูลรูปแบบ JSON
 
+3. **แบบทดสอบ: Digital Pin, Switch, Relay และ DHT Sensor (`/exam_digitalpin_digitalsensor`)**
+   - จำนวน: 15 ข้อ (15 คะแนน)
+   - ครอบคลุมเนื้อหา: คำสั่ง `pinMode(GPIO, OUTPUT/INPUT_PULLUP)`, ขาที่เป็น Input-only บน ESP32 (GPIO 34, 35, 36, 39), ขาที่ต่อ SPI Flash ภายในชิป (GPIO 6-11), คำสั่ง `digitalRead()`, วงจร Active-Low สวิตช์ปุ่มกด, ตัวต้านทาน Pull-up (10kΩ), หน้าสัมผัสรีเลย์ COM, NO, NC, การควบคุมโหลดไฟฟ้ากำลังสูง, วงจร Optocoupler ป้องกันสัญญาณรบกวน, ความแตกต่างระหว่าง DHT11 และ DHT22, คำสั่ง `dht.readTemperature()`, และการตรวจสอบค่า Sensor ด้วยฟังก์ชัน `isnan()`
+
 ---
 
 ## 🛡️ มาตรฐานความปลอดภัย 6 ชั้น (6-Layer Anti-Cheat)
@@ -67,5 +71,6 @@ Exam_IoT/
 │   ├── behavior_logs.json
 │   └── settings.json
 ├── exam_wifi/            # ชุดข้อสอบ Wi-Fi บน ESP32 (Index.html, Code.gs)
-└── exam_websocket/       # ชุดข้อสอบ ESP32 Web Server & WebSocket (Index.html, Code.gs)
+├── exam_websocket/       # ชุดข้อสอบ ESP32 Web Server & WebSocket (Index.html, Code.gs)
+└── exam_digitalpin_digitalsensor/ # ชุดข้อสอบ Digital Pin, Switch, Relay และ DHT Sensor (Index.html, Code.gs)
 ```

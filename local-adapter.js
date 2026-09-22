@@ -16,6 +16,8 @@
         examType = 'exam_websocket';
     } else if (path.indexOf('wifi') !== -1) {
         examType = 'exam_wifi';
+    } else if (path.indexOf('digital') !== -1) {
+        examType = 'exam_digitalpin_digitalsensor';
     }
 
     function LocalScriptRunner() {

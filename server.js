@@ -56,6 +56,26 @@ const QUIZ_ANSWER_KEYS = {
             "q_13": "80",
             "q_14": "การแสดงข้อมูลเซนเซอร์แบบกราฟเรียลไทม์"
         }
+    },
+    exam_digitalpin_digitalsensor: {
+        title: "แบบทดสอบเรื่อง Digital Pin, Switch, Relay และ DHT Sensor",
+        keys: {
+            "q_0": "pinMode(GPIO, OUTPUT);",
+            "q_1": "GPIO 34, 35, 36, 39",
+            "q_2": "เชื่อมต่อกับหน่วยความจำ SPI Flash ภายในชิป",
+            "q_3": "digitalRead(GPIO);",
+            "q_4": "LOW (0V / GND)",
+            "q_5": "สถานะ LOW",
+            "q_6": "10k Ohm (10,000 Ohm)",
+            "q_7": "COM, NO, NC",
+            "q_8": "หน้าสัมผัสต่อกัน (ปิดวงจร) กระแสไฟฟ้าไหลผ่านได้",
+            "q_9": "จ่ายไฟเลี้ยงขดลวดแม่เหล็กไฟฟ้าของรีเลย์ (Relay Electromagnet)",
+            "q_10": "Optocoupler",
+            "q_11": "DHT22 มีความแม่นยำสูงกว่า และช่วงการวัดกว้างกว่า DHT11",
+            "q_12": "10k Ohm",
+            "q_13": "dht.readTemperature();",
+            "q_14": "isnan()"
+        }
     }
 };
 
@@ -362,6 +382,8 @@ const server = http.createServer(async (req, res) => {
         relativePath = '/exam_wifi/Index.html';
     } else if (relativePath === '/exam_websocket' || relativePath === '/exam_websocket/') {
         relativePath = '/exam_websocket/Index.html';
+    } else if (relativePath === '/exam_digitalpin_digitalsensor' || relativePath === '/exam_digitalpin_digitalsensor/') {
+        relativePath = '/exam_digitalpin_digitalsensor/Index.html';
     }
 
     let filePath = path.join(ROOT_DIR, relativePath);

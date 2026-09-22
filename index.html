@@ -614,14 +614,14 @@
             <div class="stat-card">
                 <div class="stat-icon" style="background: rgba(56, 189, 248, 0.15); color: var(--accent-blue);">📚</div>
                 <div>
-                    <div class="stat-val">2 ชุด</div>
+                    <div class="stat-val">3 ชุด</div>
                     <div class="stat-lbl">แบบทดสอบที่พร้อมสอบ</div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo);">🎯</div>
                 <div>
-                    <div class="stat-val">30 ข้อ</div>
+                    <div class="stat-val">45 ข้อ</div>
                     <div class="stat-lbl">คำถามมาตรฐานทั้งหมด</div>
                 </div>
             </div>
@@ -711,6 +711,38 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Exam 3: Digital Pin, Switch, Relay & DHT -->
+                <div class="exam-card">
+                    <div>
+                        <div class="card-header">
+                            <span class="exam-badge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border-color: rgba(16, 185, 129, 0.3);">โมดูลที่ 3: ดิจิทัล & เซนเซอร์</span>
+                            <span style="font-size: 1.8rem;">⚡</span>
+                        </div>
+                        <h3 class="exam-title">Digital Pin, Switch, Relay & DHT Sensor</h3>
+                        <p class="exam-desc">
+                            ทดสอบการใช้งาน GPIO Input/Output, พิน Input-only (34-39), พินแฟลช SPI (6-11), วงจร Pull-up/Pull-down, ขั้วต่อรีเลย์ (NO/NC/COM), วงจรแยกด้วยแสง Optocoupler, พิน JD-VCC, และการอ่านเซนเซอร์ DHT11/DHT22
+                        </p>
+                        <div class="topic-tags">
+                            <span class="topic-tag">15 ข้อ (15 คะแนน)</span>
+                            <span class="topic-tag">pinMode() & digitalRead()</span>
+                            <span class="topic-tag">INPUT_PULLUP</span>
+                            <span class="topic-tag">Relay Active LOW</span>
+                            <span class="topic-tag">Optocoupler & JD-VCC</span>
+                            <span class="topic-tag">DHT11 / DHT22</span>
+                        </div>
+                    </div>
+                    <div class="exam-footer" style="flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 10px; width: 100%;">
+                            <a href="/exam_digitalpin_digitalsensor/" class="btn btn-primary" target="_blank" style="flex: 1; background: linear-gradient(135deg, #059669, #10b981);">
+                                <span>🚀 เริ่มทำแบบทดสอบ</span>
+                            </a>
+                            <button class="btn btn-secondary" onclick="openTeacherModal('exam_digitalpin_digitalsensor')" style="background: rgba(16, 185, 129, 0.12); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.35);">
+                                <span>👨‍🏫 จัดการสำหรับครู (Sheet & โค้ด)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -731,6 +763,7 @@
                         <option value="all">ทุกชุดแบบทดสอบ (All Exams)</option>
                         <option value="exam_wifi">แบบทดสอบ: Wi-Fi</option>
                         <option value="exam_websocket">แบบทดสอบ: WebSocket</option>
+                        <option value="exam_digitalpin_digitalsensor">แบบทดสอบ: Digital Pin & Sensor</option>
                     </select>
                 </div>
 
@@ -984,7 +1017,9 @@
             
             subTitle.innerText = examKey === 'exam_wifi' 
                 ? 'แบบทดสอบ: การใช้งาน Wi-Fi บน ESP32' 
-                : 'แบบทดสอบ: ESP32 Web Server & WebSocket';
+                : examKey === 'exam_websocket'
+                ? 'แบบทดสอบ: ESP32 Web Server & WebSocket'
+                : 'แบบทดสอบ: Digital Pin, Switch, Relay และ DHT Sensor';
 
             modal.style.display = 'flex';
             switchModalTab('code');
