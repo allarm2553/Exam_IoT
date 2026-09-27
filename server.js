@@ -116,6 +116,26 @@ const QUIZ_ANSWER_KEYS = {
             "q_13": "เพื่อให้แสดงผลข้อความออกทางหน้าจอ Serial Monitor ได้อย่างถูกต้อง อ่านไม่เป็นขยะตัวอักษร",
             "q_14": "monitor_speed = 115200"
         }
+    },
+    exam_display: {
+        title: "แบบทดสอบเรื่อง OLED, LCD, Library, คำสั่ง และการเชื่อมต่อ",
+        keys: {
+            "q_0": "128x64 พิกเซล",
+            "q_1": "พิกเซลสามารถเปล่งแสงได้เองโดยไม่ต้องมีหลอด Backlight",
+            "q_2": "GPIO 21 (SDA), GPIO 22 (SCL)",
+            "q_3": "0x3C และ 0x27",
+            "q_4": "Adafruit_SSD1306 และ Adafruit_GFX",
+            "q_5": "จอแสดงผลไม่มีขา Reset แยกต่างหาก (ใช้ขารีเซ็ตร่วมกับไมโครคอนโทรลเลอร์)",
+            "q_6": "display.display();",
+            "q_7": "lcd.backlight();",
+            "q_8": "ย้ายเคอร์เซอร์ไปที่คอลัมน์แรก แถวที่สอง",
+            "q_9": "8 ตัว",
+            "q_10": "display.startscrollright(0x00, 0x0F);",
+            "q_11": "ตัวต้านทานปรับค่าได้ (Potentiometer / Trimpot)",
+            "q_12": "display.clearDisplay();",
+            "q_13": "LCD Image Converter",
+            "q_14": "I2C_Scanner"
+        }
     }
 };
 
@@ -428,6 +448,8 @@ const server = http.createServer(async (req, res) => {
         relativePath = '/exam_analogpin_analogsensor/Index.html';
     } else if (relativePath.toLowerCase() === '/install_setting' || relativePath.toLowerCase() === '/install_setting/') {
         relativePath = '/Install_Setting/Index.html';
+    } else if (relativePath.toLowerCase() === '/exam_display' || relativePath.toLowerCase() === '/exam_display/') {
+        relativePath = '/exam_display/Index.html';
     }
 
     let filePath = path.join(ROOT_DIR, relativePath);

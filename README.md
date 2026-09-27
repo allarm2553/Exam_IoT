@@ -26,6 +26,10 @@
    - จำนวน: 15 ข้อ (15 คะแนน)
    - ครอบคลุมเนื้อหา: หน้าที่ของ Arduino IDE ในการแปลโค้ดภาษาเครื่อง, Extension PlatformIO IDE บน VS Code, ข้อกำหนดการติดตั้ง Python บน Windows, การเพิ่ม Boards Manager URLs ใน Preferences, การค้นหาและติดตั้งแพ็กเกจ ESP32, โครงสร้างไฟล์ `platformio.ini`, โฟลเดอร์ `src/main.cpp`, คำสั่ง `#include <Arduino.h>`, ปุ่ม Verify/Compile, วิธีแก้ปัญหา Connecting Timeout ด้วยปุ่ม BOOT (IO0), ไอคอน Checkmark, เมนู Tools > Port, ไดรเวอร์ USB-to-UART (CP2102/CH340), การตั้งค่า Baud Rate ใน Serial Monitor และพารามิเตอร์ `monitor_speed = 115200`
 
+6. **แบบทดสอบ: OLED, LCD, Library, คำสั่ง และการเชื่อมต่อ (`/exam_display`)**
+   - จำนวน: 15 ข้อ (15 คะแนน)
+   - ครอบคลุมเนื้อหา: คุณสมบัติและความละเอียดของจอ OLED SSD1306 (128x64 พิกเซล) การเปล่งแสงได้เองโดยไม่ต้องมี Backlight, จอ LCD 16x2, ขาสัญญาณ I2C มาตรฐานของ ESP32 (GPIO 21 SDA / GPIO 22 SCL), ค่า I2C Address เริ่มต้น (OLED 0x3C / LCD 0x27), Library Adafruit_SSD1306 & Adafruit_GFX, พารามิเตอร์ขา Reset (-1), คำสั่ง `display.display()`, คำสั่ง `lcd.backlight()`, การกำหนดพิกัดเคอร์เซอร์ `lcd.setCursor(0, 1)`, การสร้าง Custom Characters 8 ตัวใน CGRAM, คำสั่งเลื่อนข้อความ `display.startscrollright()`, ตัวต้านทานปรับ Contrast, คำสั่ง `display.clearDisplay()`, โปรแกรมแปลงรูปภาพ LCD Image Converter, และการตรวจสอบแอดเดรสด้วย I2C_Scanner
+
 ---
 
 ## 🛡️ มาตรฐานความปลอดภัย 6 ชั้น (6-Layer Anti-Cheat)
@@ -82,5 +86,6 @@ Exam_IoT/
 ├── exam_websocket/       # ชุดข้อสอบ ESP32 Web Server & WebSocket (Index.html, Code.gs)
 ├── exam_digitalpin_digitalsensor/ # ชุดข้อสอบ Digital Pin, Switch, Relay และ DHT Sensor (Index.html, Code.gs)
 ├── exam_analogpin_analogsensor/   # ชุดข้อสอบ Analog Pin, ADC, Sensors และการแปลงสัญญาณ (Index.html, Code.gs)
-└── Install_Setting/               # ชุดข้อสอบ การติดตั้ง Arduino IDE & VS Code PlatformIO (Index.html, Code.gs)
+├── Install_Setting/               # ชุดข้อสอบ การติดตั้ง Arduino IDE & VS Code PlatformIO (Index.html, Code.gs)
+└── exam_display/                  # ชุดข้อสอบ OLED, LCD, Library, คำสั่ง และการเชื่อมต่อ (Index.html, Code.gs)
 ```

@@ -22,6 +22,8 @@
         examType = 'exam_analogpin_analogsensor';
     } else if (path.indexOf('install') !== -1 || path.indexOf('setting') !== -1) {
         examType = 'Install_Setting';
+    } else if (path.indexOf('display') !== -1 || path.indexOf('oled') !== -1 || path.indexOf('lcd') !== -1) {
+        examType = 'exam_display';
     }
 
     function LocalScriptRunner() {
