@@ -22,6 +22,10 @@
         examType = 'exam_analogpin_analogsensor';
     } else if (path.indexOf('install') !== -1 || path.indexOf('setting') !== -1) {
         examType = 'Install_Setting';
+    } else if (path.indexOf('display') !== -1) {
+        examType = 'exam_display';
+    } else if (path.indexOf('mqtt') !== -1) {
+        examType = 'exam_mqtt';
     }
 
     function LocalScriptRunner() {

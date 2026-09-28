@@ -16,7 +16,7 @@ if %errorlevel% neq 0 (
         exit /b 1
     ) else (
         echo กำลังเริ่มต้นผ่าน Python Server...
-        start http://localhost:8000
+        start http://localhost:8888
         python server.py
         pause
         exit /b 0
@@ -25,7 +25,7 @@ if %errorlevel% neq 0 (
 
 echo พบ Node.js เรียบร้อย!
 echo กำลังเปิดหน้า Dashboard ในเบราว์เซอร์อัตโนมัติ...
-start http://localhost:8000
+start http://localhost:8888
 echo กำลังรัน Node.js Server...
 echo.
 node server.js

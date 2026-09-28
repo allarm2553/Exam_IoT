@@ -12,7 +12,7 @@ from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
 
-PORT = int(os.environ.get('PORT', 8000))
+PORT = int(os.environ.get('PORT', 8888))
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
 SUBMISSIONS_FILE = os.path.join(DATA_DIR, 'submissions.json')
@@ -118,6 +118,46 @@ QUIZ_ANSWER_KEYS = {
             'q_12': 'ต้องทำการติดตั้งไดรเวอร์ (Driver) เพื่อให้คอมพิวเตอร์มองเห็นพอร์ตสื่อสาร (COM Port)',
             'q_13': 'เพื่อให้แสดงผลข้อความออกทางหน้าจอ Serial Monitor ได้อย่างถูกต้อง อ่านไม่เป็นขยะตัวอักษร',
             'q_14': 'monitor_speed = 115200'
+        }
+    },
+    'exam_display': {
+        'title': 'แบบทดสอบเรื่อง OLED, LCD, Library, คำสั่ง และการเชื่อมต่อ',
+        'keys': {
+            'q_0': '128x64 พิกเซล',
+            'q_1': 'พิกเซลสามารถเปล่งแสงได้เองโดยไม่ต้องมีหลอด Backlight',
+            'q_2': 'GPIO 21 (SDA), GPIO 22 (SCL)',
+            'q_3': '0x3C และ 0x27',
+            'q_4': 'Adafruit_SSD1306 และ Adafruit_GFX',
+            'q_5': 'จอแสดงผลไม่มีขา Reset แยกต่างหาก (ใช้ขารีเซ็ตร่วมกับไมโครคอนโทรลเลอร์)',
+            'q_6': 'display.display();',
+            'q_7': 'lcd.backlight();',
+            'q_8': 'ย้ายเคอร์เซอร์ไปที่คอลัมน์แรก แถวที่สอง',
+            'q_9': '8 ตัว',
+            'q_10': 'display.startscrollright(0x00, 0x0F);',
+            'q_11': 'ตัวต้านทานปรับค่าได้ (Potentiometer / Trimpot)',
+            'q_12': 'display.clearDisplay();',
+            'q_13': 'LCD Image Converter',
+            'q_14': 'I2C_Scanner'
+        }
+    },
+    'exam_mqtt': {
+        'title': 'แบบทดสอบ: หลักการและการใช้งาน MQTT',
+        'keys': {
+            'q_0': 'Message Queuing Telemetry Transport - โปรโตคอลสื่อสารน้ำหนักเบาสำหรับอุปกรณ์ IoT',
+            'q_1': 'Publish / Subscribe',
+            'q_2': 'ข้อความจะถูกส่งอย่างมากที่สุด 1 ครั้ง โดยไม่มีการตอบรับการรับข้อความ (No Acknowledgment)',
+            'q_3': 'QoS 1 รับประกันส่งอย่างน้อย 1 ครั้ง (อาจมีข้อความซ้ำ) ส่วน QoS 2 รับประกันส่งสำเร็จเพียงครั้งเดียวแน่นอน',
+            'q_4': 'MQTT Broker ทำหน้าที่รับ กรอง และส่งต่อข้อความไปยัง Subscriber ที่สนใจ',
+            'q_5': 'เป็นได้ทั้ง Publisher และ Subscriber (MQTT Client)',
+            'q_6': 'ให้ Broker บันทึกข้อความล่าสุดของ Topic นั้นไว้ เพื่อส่งให้ Client ใหม่ที่กด Subscribe ทันทีที่เชื่อมต่อ',
+            'q_7': '1883',
+            'q_8': 'เครื่องหมายสแลช (/)',
+            'q_9': 'esp32/dht/temperature และ esp32/dht/humidity',
+            'q_10': 'ทำการ Subscribe Topic นั้นเพื่อรอรับข้อความสั่งงาน ("on"/"off")',
+            'q_11': 'เป็นข้อความสตริงที่ใช้ระบุหมวดหมู่ช่องทางข้อมูล เพื่อให้ Broker กรองและกระจายข้อความได้ถูกต้อง',
+            'q_12': 'Mosquitto MQTT Broker',
+            'q_13': 'sudo apt install -y mosquitto mosquitto-clients',
+            'q_14': 'mosquitto_sub -h localhost -t testTopic -u user -P pass'
         }
     }
 }

@@ -26,6 +26,14 @@
    - จำนวน: 15 ข้อ (15 คะแนน)
    - ครอบคลุมเนื้อหา: หน้าที่ของ Arduino IDE ในการแปลโค้ดภาษาเครื่อง, Extension PlatformIO IDE บน VS Code, ข้อกำหนดการติดตั้ง Python บน Windows, การเพิ่ม Boards Manager URLs ใน Preferences, การค้นหาและติดตั้งแพ็กเกจ ESP32, โครงสร้างไฟล์ `platformio.ini`, โฟลเดอร์ `src/main.cpp`, คำสั่ง `#include <Arduino.h>`, ปุ่ม Verify/Compile, วิธีแก้ปัญหา Connecting Timeout ด้วยปุ่ม BOOT (IO0), ไอคอน Checkmark, เมนู Tools > Port, ไดรเวอร์ USB-to-UART (CP2102/CH340), การตั้งค่า Baud Rate ใน Serial Monitor และพารามิเตอร์ `monitor_speed = 115200`
 
+6. **แบบทดสอบ: OLED SSD1306, LCD 16x2, Library, คำสั่ง และการเชื่อมต่อ I2C (`/exam_display`)**
+   - จำนวน: 15 ข้อ (15 คะแนน)
+   - ครอบคลุมเนื้อหา: ความละเอียดจอ OLED SSD1306 0.96" (128x64 พิกเซล), คุณสมบัติจอ OLED เปล่งแสงได้เองไม่ต้องมี Backlight, ขาสัญญาณ I2C มาตรฐาน ESP32 คือ GPIO 21 (SDA) และ GPIO 22 (SCL), I2C Address เริ่มต้นของ OLED (0x3C) และ LCD PCF8574 (0x27), Library `Adafruit_SSD1306` + `Adafruit_GFX` และ `LiquidCrystal_I2C`, พารามิเตอร์ `-1` (ไม่มีขา Reset), คำสั่งส่งข้อมูลบัฟเฟอร์ `display.display()`, คำสั่งเปิดไฟ `lcd.backlight()`, ตำแหน่งเคอร์เซอร์ `lcd.setCursor(0, 1)`, การสร้าง Custom Character ใน CGRAM (สูงสุด 8 ตัว), คำสั่งเลื่อนข้อความ `display.startscrollright()`, การปรับ Contrast ด้วย Trimpot, คำสั่ง `display.clearDisplay()`, เครื่องมือแปลงภาพบิตแมป LCD Image Converter และการสแกนหาอุปกรณ์ด้วย `I2C_Scanner`
+
+7. **แบบทดสอบ: หลักการและการใช้งาน MQTT (`/exam_mqtt`)**
+   - จำนวน: 15 ข้อ (15 คะแนน)
+   - ครอบคลุมเนื้อหา: ความหมายของ Message Queuing Telemetry Transport, โครงสร้างการสื่อสารแบบ Publish / Subscribe, คุณภาพการส่งข้อความ Quality of Service (QoS 0: At most once, QoS 1: At least once, QoS 2: Exactly once), หน้าที่ของ MQTT Broker ในการกรองและกระจายข้อความ, บทบาทของอุปกรณ์ IoT (ESP32/ESP8266) ในฐานะ MQTT Client (Publisher & Subscriber), การตั้งค่า Retain Flag เก็บข้อความล่าสุด, หมายเลขพอร์ตมาตรฐาน 1883 (Non-SSL), สัญลักษณ์แบ่งระดับชั้น Topic (/), การตั้งชื่อ Topic อย่างเป็นระบบ, การรับคำสั่งควบคุมด้วยการ Subscribe Topic, โปรแกรม Mosquitto MQTT Broker บน Linux, คำสั่งติดตั้ง `sudo apt install -y mosquitto mosquitto-clients` และคำสั่งทดสอบ `mosquitto_sub` / `mosquitto_pub`
+
 ---
 
 ## 🛡️ มาตรฐานความปลอดภัย 6 ชั้น (6-Layer Anti-Cheat)
@@ -35,7 +43,7 @@
 - **Layer 3: Desktop Anti-Screenshot** — ดักจับปุ่ม PrintScreen พร้อมล้างคลิปบอร์ด, บล็อกคำสั่ง `Ctrl+P`, `Ctrl+S`, `Ctrl+Shift+S` (Snipping Tool), `F12`
 - **Layer 4: Mobile Anti-Cheat** — ปิด Callout/Context Menu ป้องกันการกดค้างบน iOS & Android, บล็อกท่าทางปัด 3 นิ้วแคปหน้าจอ
 - **Layer 5: Blur Detection & Anti-Snipping Shield** — ม่านดำบังหน้าจอทันทีเมื่อสลับแอปหรือเปิดโปรแกรมแคปภาพ พร้อมระบบล็อกข้อสอบหากสลับหน้าจอเกิน 3 ครั้ง
-- **Layer 6: Dynamic Forensic Watermark** — เลเยอร์ลายน้ำประทับ "รหัสประจำตัว • ชื่อ-นามสกุล" ทแยงมุมทั่วทั้งหน้าจอแบบโปร่งแสง
+- **Layer 6: Dynamic Forensic Watermark** — เลเยอร์ลายน้ำประทับ "รหัสประจำตัว • ชื่อ-นามสกุล • IoT-TATC-THERDSAK" ทแยงมุมทั่วทั้งหน้าจอแบบโปร่งแสง
 
 ---
 
@@ -51,7 +59,7 @@
 
 ### วิธีที่ 1: ดับเบิลคลิกเปิดไฟล์ (Windows)
 ดับเบิลคลิกที่ไฟล์ **`start_server.bat`** ระบบจะเปิดเซิร์ฟเวอร์และเรียกเบราว์เซอร์อัตโนมัติที่:
-👉 **`http://localhost:8000`**
+👉 **`http://localhost:8888`**
 
 ### วิธีที่ 2: รันผ่าน Node.js (Zero Dependency)
 ```bash
@@ -82,5 +90,7 @@ Exam_IoT/
 ├── exam_websocket/       # ชุดข้อสอบ ESP32 Web Server & WebSocket (Index.html, Code.gs)
 ├── exam_digitalpin_digitalsensor/ # ชุดข้อสอบ Digital Pin, Switch, Relay และ DHT Sensor (Index.html, Code.gs)
 ├── exam_analogpin_analogsensor/   # ชุดข้อสอบ Analog Pin, ADC, Sensors และการแปลงสัญญาณ (Index.html, Code.gs)
-└── Install_Setting/               # ชุดข้อสอบ การติดตั้ง Arduino IDE & VS Code PlatformIO (Index.html, Code.gs)
+├── Install_Setting/               # ชุดข้อสอบ การติดตั้ง Arduino IDE & VS Code PlatformIO (Index.html, Code.gs)
+├── exam_display/                  # ชุดข้อสอบ OLED SSD1306, LCD 16x2, Library และ I2C (Index.html, Code.gs)
+└── exam_mqtt/                     # ชุดข้อสอบ หลักการและการใช้งาน MQTT (Index.html, Code.gs)
 ```

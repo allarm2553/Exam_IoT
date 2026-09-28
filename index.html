@@ -614,14 +614,14 @@
             <div class="stat-card">
                 <div class="stat-icon" style="background: rgba(56, 189, 248, 0.15); color: var(--accent-blue);">📚</div>
                 <div>
-                    <div class="stat-val">5 ชุด</div>
+                    <div class="stat-val">7 ชุด</div>
                     <div class="stat-lbl">แบบทดสอบที่พร้อมสอบ</div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo);">🎯</div>
                 <div>
-                    <div class="stat-val">75 ข้อ</div>
+                    <div class="stat-val">105 ข้อ</div>
                     <div class="stat-lbl">คำถามมาตรฐานทั้งหมด</div>
                 </div>
             </div>
@@ -807,6 +807,70 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Exam 6: OLED & LCD Display -->
+                <div class="exam-card">
+                    <div>
+                        <div class="card-header">
+                            <span class="exam-badge" style="background: rgba(124, 58, 237, 0.15); color: #a78bfa; border-color: rgba(124, 58, 237, 0.3);">โมดูลที่ 6: จอแสดงผล & I2C</span>
+                            <span style="font-size: 1.8rem;">🖥️</span>
+                        </div>
+                        <h3 class="exam-title">OLED SSD1306 & LCD 16x2 Display</h3>
+                        <p class="exam-desc">
+                            ทดสอบความรู้เกี่ยวกับจอ OLED SSD1306 (128x64), จอ I2C LCD 16x2 (PCF8574), Library Adafruit_SSD1306 / GFX / LiquidCrystal_I2C, ขาสัญญาณ I2C GPIO 21 (SDA) / 22 (SCL), I2C Scanner, การสร้าง Custom Char และการแปลงภาพ Bitmap
+                        </p>
+                        <div class="topic-tags">
+                            <span class="topic-tag">15 ข้อ (15 คะแนน)</span>
+                            <span class="topic-tag">OLED 128x64 & LCD 16x2</span>
+                            <span class="topic-tag">I2C (GPIO 21/22)</span>
+                            <span class="topic-tag">Address 0x3C / 0x27</span>
+                            <span class="topic-tag">Adafruit_SSD1306 & GFX</span>
+                            <span class="topic-tag">I2C Scanner & Bitmap</span>
+                        </div>
+                    </div>
+                    <div class="exam-footer" style="flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 10px; width: 100%;">
+                            <a href="/exam_display/" class="btn btn-primary" target="_blank" style="flex: 1; background: linear-gradient(135deg, #7c3aed, #9333ea);">
+                                <span>🚀 เริ่มทำแบบทดสอบ</span>
+                            </a>
+                            <button class="btn btn-secondary" onclick="openTeacherModal('exam_display')" style="background: rgba(124, 58, 237, 0.12); color: #c4b5fd; border-color: rgba(124, 58, 237, 0.35);">
+                                <span>👨‍🏫 จัดการสำหรับครู (Sheet & โค้ด)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exam 7: MQTT Protocol & Broker -->
+                <div class="exam-card">
+                    <div>
+                        <div class="card-header">
+                            <span class="exam-badge" style="background: rgba(13, 148, 136, 0.15); color: #2dd4bf; border-color: rgba(13, 148, 136, 0.3);">โมดูลที่ 7: โปรโตคอล MQTT & โบรเกอร์</span>
+                            <span style="font-size: 1.8rem;">📡</span>
+                        </div>
+                        <h3 class="exam-title">หลักการและการใช้งาน MQTT</h3>
+                        <p class="exam-desc">
+                            ทดสอบความรู้เกี่ยวกับสถาปัตยกรรม Publish/Subscribe, MQTT Broker, บทบาท Client (ESP32/ESP8266), ลำดับชั้น Topic (/), ระดับ QoS 0/1/2, สถานะ Retain Flag, พอร์ตมาตรฐาน 1883, การติดตั้ง Mosquitto บน Linux และคำสั่ง `mosquitto_sub` / `mosquitto_pub`
+                        </p>
+                        <div class="topic-tags">
+                            <span class="topic-tag">15 ข้อ (15 คะแนน)</span>
+                            <span class="topic-tag">Publish / Subscribe</span>
+                            <span class="topic-tag">MQTT Broker & Client</span>
+                            <span class="topic-tag">QoS 0, 1, 2</span>
+                            <span class="topic-tag">Retain Flag & Port 1883</span>
+                            <span class="topic-tag">Topic Hierarchy & Mosquitto</span>
+                        </div>
+                    </div>
+                    <div class="exam-footer" style="flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 10px; width: 100%;">
+                            <a href="/exam_mqtt/" class="btn btn-primary" target="_blank" style="flex: 1; background: linear-gradient(135deg, #0d9488, #0f766e);">
+                                <span>🚀 เริ่มทำแบบทดสอบ</span>
+                            </a>
+                            <button class="btn btn-secondary" onclick="openTeacherModal('exam_mqtt')" style="background: rgba(13, 148, 136, 0.12); color: #5eead4; border-color: rgba(13, 148, 136, 0.35);">
+                                <span>👨‍🏫 จัดการสำหรับครู (Sheet & โค้ด)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -830,6 +894,8 @@
                         <option value="exam_digitalpin_digitalsensor">แบบทดสอบ: Digital Pin & Sensor</option>
                         <option value="exam_analogpin_analogsensor">แบบทดสอบ: Analog Pin & ADC</option>
                         <option value="Install_Setting">แบบทดสอบ: Arduino IDE & VS Code</option>
+                        <option value="exam_display">แบบทดสอบ: OLED & LCD Display</option>
+                        <option value="exam_mqtt">แบบทดสอบ: MQTT Protocol & Broker</option>
                     </select>
                 </div>
 
@@ -1089,7 +1155,11 @@
                 ? 'แบบทดสอบ: Digital Pin, Switch, Relay และ DHT Sensor'
                 : examKey === 'exam_analogpin_analogsensor'
                 ? 'แบบทดสอบ: Analog Pin, ADC, Sensors และการแปลงสัญญาณอนาล็อก'
-                : 'แบบทดสอบ: การติดตั้งใช้งาน Arduino IDE, VS Code PlatformIO และการอัปโหลดโค้ด ESP32/ESP8266';
+                : examKey === 'Install_Setting'
+                ? 'แบบทดสอบ: การติดตั้งใช้งาน Arduino IDE, VS Code PlatformIO และการอัปโหลดโค้ด ESP32/ESP8266'
+                : examKey === 'exam_display'
+                ? 'แบบทดสอบเรื่อง OLED, LCD, Library, คำสั่ง และการเชื่อมต่อ'
+                : 'แบบทดสอบ: หลักการและการใช้งาน MQTT';
 
             modal.style.display = 'flex';
             switchModalTab('code');

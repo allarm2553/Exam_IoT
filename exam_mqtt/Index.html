@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>แบบทดสอบ: หลักการและการใช้งาน MQTT</title>
+    <!-- รองรับทั้ง Google Apps Script และ Local Server -->
+    <script src="/local-adapter.js"></script>
+    <style>
+        * {
+            -webkit-touch-callout: none !important; /* ปิดเมนูคัดลอก/แชร์บนมือถือ iOS & Android */
+        }
+        body { 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            padding: 20px; 
+            background-color: #f0f2f5; 
+            color: #333; 
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none; /* ห้ามคลุมดำ/คัดลอกข้อความ */
+            touch-action: pan-y; /* ให้เลื่อนจอได้ แต่ปิด gesture ลัด */
+        }
+        input, textarea {
+            -webkit-touch-callout: default !important;
+            -webkit-user-select: auto !important;
+            user-select: auto !important; /* ให้พิมพ์ข้อมูลในกล่องข้อความได้ตามปกติ */
+        }
+        
+        /* ลายน้ำรักษาความปลอดภัยแบบไดนามิกระบุตัวตนผู้สอบ (Forensic Watermark) */
+        #watermarkOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.12;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-auto-rows: 140px;
+            overflow: hidden;
+        }
+        .watermark-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(-25deg);
+            font-size: 12px;
+            font-weight: 800;
+            color: #111;
+            text-align: center;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        /* ซ่อนเนื้อหาทั้งหมดเมื่อมีการสั่งพิมพ์ (Ctrl+P หรือ Save as PDF) */
+        @media print {
+            body { display: none !important; }
+        }
+
+        /* ม่านป้องกันการแคปหน้าจอเมื่อหน้าต่างหลุดโฟกัส (เช่น กด Win+Shift+S หรือเปิด Snipping Tool) */
+        #captureShield {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #0b0c10;
+            z-index: 9998;
+            color: white;
+            text-align: center;
+            padding-top: 18%;
+        }
+        .form-container { max-width: 650px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { color: #0d9488; border-bottom: 2px solid #0d9488; padding-bottom: 10px; margin-top: 0; }
+        .question-block { background: #f8f9fa; padding: 20px; margin-bottom: 20px; border-radius: 8px; border-left: 5px solid #0d9488; }
+        .question-title { font-weight: bold; margin-bottom: 12px; font-size: 1.1em; line-height: 1.5; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+        .info-group { margin-bottom: 10px; }
+        .info-group-full { grid-column: span 2; }
+        .info-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.95em; color: #555; }
+        
+        .option-item { margin: 10px 0; display: flex; align-items: center; }
+        .option-item input { margin-right: 12px; cursor: pointer; transform: scale(1.2); }
+        .option-item label { cursor: pointer; width: 100%; font-size: 1em; }
+        .submit-btn { background-color: #0d9488; color: white; padding: 14px 24px; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; width: 100%; font-weight: bold; transition: background 0.3s; margin-top: 10px; }
+        .submit-btn:hover { background-color: #0f766e; }
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1em; }
+
+        /* หน้าจอล็อกฉากหลังมืดทึบ */
+        #lockScreen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.96);
+            z-index: 9999;
+            color: white;
+            text-align: center;
+            padding-top: 15%;
+        }
+        .lock-box { max-width: 500px; margin: 0 auto; padding: 35px; background: #222; border: 2px solid #ff3b30; border-radius: 12px; }
+        .refresh-btn { background-color: #ff3b30; color: white; padding: 15px 30px; border: none; border-radius: 6px; font-size: 1em; cursor: pointer; margin-top: 25px; font-weight: bold; }
+        .refresh-btn:hover { background-color: #d32f2f; }
+
+        /* แถบจัดการสำหรับครูผู้สอน */
+        .teacher-panel {
+            max-width: 650px;
+            margin: 0 auto 20px auto;
+            background: #f0fdfa;
+            border: 1px solid #ccfbf1;
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+        .teacher-panel h3 {
+            margin: 0 0 8px 0;
+            color: #115e59;
+            font-size: 1.05em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sheet-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .sheet-input-group input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #99f6e4;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+        .save-sheet-btn {
+            background-color: #0d9488;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+        .save-sheet-btn:hover {
+            background-color: #0f766e;
+        }
+        .portal-nav-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            color: #0f766e;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.92em;
+        }
+        .portal-nav-btn:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+<!-- เลเยอร์ลายน้ำ Forensic Watermark -->
+<div id="watermarkOverlay"></div>
+
+<!-- หน้าต่างม่านดำบังข้อมูล (Anti-Snipping & Focus Protection Shield) -->
+<div id="captureShield">
+    <div style="max-width: 480px; margin: 0 auto; padding: 25px; background: #16181f; border-radius: 12px; border: 1px solid #333;">
+        <h2 style="color: #ffcc00; border: none; margin-bottom: 10px;">⚠️ ระบบความปลอดภัย</h2>
+        <p style="font-size: 1.1em; line-height: 1.6;">หน้าต่างแบบทดสอบหลุดโฟกัส หรือมีการเรียกใช้งานโปรแกรมจับภาพหน้าจอ</p>
+        <p style="color: #bbb; font-size: 0.95em;">กรุณาคลิกกลับเข้ามาที่หน้านี้เพื่อทำข้อสอบต่อ</p>
+    </div>
+</div>
+
+<!-- หน้าจอล็อกถาวรเมื่อทำผิดกฎ 3 ครั้ง -->
+<div id="lockScreen">
+    <div class="lock-box">
+        <h2 style="color: #ff3b30; border: none;">🚫 ข้อสอบถูกระงับ</h2>
+        <p style="font-size: 1.1em; line-height: 1.6;">ระบบตรวจพบการสลับหน้าจอ ออกจากแอป หรือพยายามคัดลอก/แคปเจอร์หน้าจอเกินโควตาที่กำหนด</p>
+        <p style="color: #aaa; margin-top: 10px;">พฤติกรรมนี้ถูกบันทึกประวัติการสอบเข้าสู่ระบบเรียบร้อยแล้ว</p>
+        <button class="refresh-btn" onclick="window.location.reload()">ลองโหลดหน้าใหม่อีกครั้ง</button>
+    </div>
+</div>
+
+<div style="max-width: 650px; margin: 0 auto;">
+    <a href="../" class="portal-nav-btn">← กลับหน้ารวมแบบทดสอบ (Dashboard)</a>
+</div>
+
+<!-- ส่วนจัดการสำหรับครูผู้สอน (Google Sheets & Source Code) -->
+<div class="teacher-panel">
+    <h3>👨‍🏫 จัดการแบบทดสอบสำหรับครูผู้สอน (Google Sheets & Script)</h3>
+    <p style="margin: 0 0 10px 0; font-size: 0.88em; color: #134e4a;">
+        วางลิงก์ Google Sheets ของคุณ เพื่อใช้เป็นฐานข้อมูลบันทึกคะแนนและประวัติการสอบ:
+    </p>
+    
+    <div class="sheet-input-group">
+        <input type="text" id="teacherSheetUrl" placeholder="วาง URL ของ Google Sheets ที่นี่..." value="">
+        <button type="button" class="save-sheet-btn" onclick="saveTeacherSheetUrl()">💾 เซฟลิงก์</button>
+    </div>
+    
+    <div id="sheetStatusInfo" style="font-size: 0.86em; color: #4b5563; margin-bottom: 8px;">
+        <span id="sheetIdBadge" style="background: #ccfbf1; color: #115e59; padding: 2px 8px; border-radius: 4px; font-family: monospace;">ยังไม่ได้ระบุ Sheet ID</span>
+        <div style="margin-top: 6px;">
+            <a id="sheetExternalLink" href="#" target="_blank" style="display: none; color: #0d9488; text-decoration: none; font-weight: bold;">↗️ เปิด Google Sheets ของคุณ</a>
+        </div>
+    </div>
+
+    <!-- ปุ่มคัดลอกโค้ด Code.gs ที่ดึง Sheet ID อัตโนมัติ และปุ่มคัดลอก Index.html -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px;">
+        <button type="button" onclick="copyCodeGsWithSheetId()" style="background: #059669; color: white; border: none; padding: 12px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 6px rgba(5,150,105,0.25); font-size: 0.92em;">
+            <span>📋 คัดลอก Code.gs (ใส่ Sheet ID แล้ว)</span>
+        </button>
+        <button type="button" onclick="copyIndexHtmlCode()" style="background: #0d9488; color: white; border: none; padding: 12px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 6px rgba(13,148,136,0.25); font-size: 0.92em;">
+            <span>📄 คัดลอก Index.html</span>
+        </button>
+    </div>
+
+    <div id="copyAlert" style="display: none; margin-top: 12px; padding: 10px; border-radius: 6px; font-size: 0.9em; font-weight: bold; text-align: center;"></div>
+</div>
+
+<div class="form-container">
+    <h2>แบบทดสอบ: หลักการและการใช้งาน MQTT</h2>
+    
+    <form action="" method="POST" id="quizForm">
+        
+        <!-- ส่วนข้อมูลผู้กรอกส่วนตัวก่อนเริ่มทำโจทย์ -->
+        <div class="question-block" style="border-left: 5px solid #0d9488;">
+            <div class="question-title" style="color: #0d9488; margin-bottom: 15px;">📝 ข้อมูลผู้เข้าสอบ</div>
+            <div class="info-grid">
+                <div class="info-group">
+                    <label for="studentIdInput">เลขประจำตัว (ID)</label>
+                    <input type="text" name="studentId" id="studentIdInput" required placeholder="เช่น 64XXXXXX">
+                    <div id="idStatusMsg" style="font-size: 0.85em; margin-top: 5px; font-weight: bold; display: none;"></div>
+                </div>
+                <div class="info-group">
+                    <label for="studentRoomInput">ห้องเรียน / กลุ่ม</label>
+                    <input type="text" name="studentRoom" id="studentRoomInput" required placeholder="เช่น ม.6/1 หรือ Sec 2">
+                </div>
+                <div class="info-group info-group-full">
+                    <label for="studentNameInput">ชื่อ - นามสกุลจริง</label>
+                    <input type="text" name="studentName" id="studentNameInput" required placeholder="นาย / นางสาว...">
+                </div>
+            </div>
+        </div>
+
+        <!-- กล่องสำหรับดึงข้อสอบสุ่มเรียงลำดับคำถาม -->
+        <div id="questionsContainer"></div>
+
+        <button type="submit" class="submit-btn">ส่งคำตอบ</button>
+    </form>
+</div>
+
+<script>
+    // ข้อมูลข้อสอบ 15 ข้อต้นแบบ
+    const quizData = [
+        {
+            q: "MQTT ย่อมาจากอะไร และถูกออกแบบมาเพื่อจุดประสงค์ใดเป็นหลัก?",
+            c: [
+                "Message Queuing Telemetry Transport - โปรโตคอลสื่อสารน้ำหนักเบาสำหรับอุปกรณ์ IoT",
+                "Media Query Transfer Technology - โปรโตคอลสตรีมมิงวิดีโอความละเอียดสูง",
+                "Master Queue Text Transport - โปรโตคอลส่งอีเมลระหว่างเซิร์ฟเวอร์",
+                "Managed Query Terminal Transport - โปรโตคอลจัดการฐานข้อมูลขนาดใหญ่"
+            ],
+            qKey: "q_0"
+        },
+        {
+            q: "รูปแบบโครงสร้างการสื่อสารหลักของโปรโตคอล MQTT คือรูปแบบใด?",
+            c: [
+                "Client-Server แบบ Request-Response",
+                "Peer-to-Peer (P2P)",
+                "Publish / Subscribe",
+                "Master-Slave แบบ Polling"
+            ],
+            qKey: "q_1"
+        },
+        {
+            q: "ในการส่งข้อความ MQTT การกำหนด Quality of Service (QoS) ระดับ 0 หมายถึงอะไร?",
+            c: [
+                "ข้อความจะถูกส่งอย่างน้อย 1 ครั้ง แต่อาจส่งซ้ำได้",
+                "ข้อความจะถูกส่งสำเร็จอย่างแน่นอนเพียง 1 ครั้งเท่านั้น",
+                "ข้อความจะถูกส่งอย่างมากที่สุด 1 ครั้ง โดยไม่มีการตอบรับการรับข้อความ (No Acknowledgment)",
+                "ไม่มีการส่งข้อความเลย"
+            ],
+            qKey: "q_2"
+        },
+        {
+            q: "ข้อใดอธิบายความแตกต่างระหว่าง QoS ระดับ 1 และ QoS ระดับ 2 ได้ถูกต้อง?",
+            c: [
+                "QoS 1 ไม่มีการตอบรับ ส่วน QoS 2 มีการตอบรับ",
+                "QoS 1 รับประกันส่งอย่างน้อย 1 ครั้ง (อาจมีข้อความซ้ำ) ส่วน QoS 2 รับประกันส่งสำเร็จเพียงครั้งเดียวแน่นอน",
+                "QoS 1 ใช้กับวิดีโอ ส่วน QoS 2 ใช้กับข้อความสั้น",
+                "QoS 1 เข้ารหัสข้อมูล ส่วน QoS 2 ไม่เข้ารหัสข้อมูล"
+            ],
+            qKey: "q_3"
+        },
+        {
+            q: "ศูนย์กลางในการจัดการและกระจายข้อความในระบบ MQTT คืออะไร และมีหน้าที่อย่างไร?",
+            c: [
+                "MQTT Client ทำหน้าที่ประมวลผลกราฟิก",
+                "MQTT Broker ทำหน้าที่รับ กรอง และส่งต่อข้อความไปยัง Subscriber ที่สนใจ",
+                "Router ทำหน้าที่แปลงสัญลักษณ์ข้อความ",
+                "Gateway ทำหน้าที่แปลงสัญญาณอนาล็อกเป็นดิจิทัล"
+            ],
+            qKey: "q_4"
+        },
+        {
+            q: "อุปกรณ์ IoT เช่น ESP32 หรือ ESP8266 ในระบบ MQTT ทำหน้าที่เป็นอะไรได้บ้าง?",
+            c: [
+                "เป็นได้เฉพาะ MQTT Broker เท่านั้น",
+                "เป็นได้เฉพาะ Publisher เท่านั้น",
+                "เป็นได้เฉพาะ Subscriber เท่านั้น",
+                "เป็นได้ทั้ง Publisher และ Subscriber (MQTT Client)"
+            ],
+            qKey: "q_5"
+        },
+        {
+            q: "การตั้งค่าสถานะ Retain Flag เป็น true ในข้อความ MQTT มีประโยชน์อย่างไร?",
+            c: [
+                "ลบข้อความทันทีหลังจากส่งสำเร็จ",
+                "ให้ Broker บันทึกข้อความล่าสุดของ Topic นั้นไว้ เพื่อส่งให้ Client ใหม่ที่กด Subscribe ทันทีที่เชื่อมต่อ",
+                "บังคับให้เปลี่ยนชื่อ Topic อัตโนมัติ",
+                "ปิดการเชื่อมต่อของ Client ทั้งหมด"
+            ],
+            qKey: "q_6"
+        },
+        {
+            q: "หมายเลขพอร์ตมาตรฐาน (Default Port) สำหรับการเชื่อมต่อ MQTT แบบไม่เข้ารหัส คือพอร์ตใด?",
+            c: [
+                "80",
+                "443",
+                "1883",
+                "8883"
+            ],
+            qKey: "q_7"
+        },
+        {
+            q: "สัญลักษณ์ใดที่ใช้ในการแบ่งระดับชั้น (Hierarchy) ของ MQTT Topic?",
+            c: [
+                "เครื่องหมายจุด (.)",
+                "เครื่องหมายสแลช (/)",
+                "เครื่องหมายแดช (-)",
+                "เครื่องหมายโคลอน (:)"
+            ],
+            qKey: "q_8"
+        },
+        {
+            q: "หากต้องการส่งค่าอุณหภูมิและความชื้นจากเซนเซอร์ DHT22 บน ESP32 ไปยัง MQTT Broker ข้อใดคือการตั้งชื่อ Topic ที่เป็นระบบและอ่านเข้าใจง่าย?",
+            c: [
+                "temp_and_hum_data_123",
+                "esp32/dht/temperature และ esp32/dht/humidity",
+                "192.168.1.1/temperature",
+                "sensor.read.all"
+            ],
+            qKey: "q_9"
+        },
+        {
+            q: "หากต้องการสั่งงานเปิด/ปิดหลอดไฟผ่าน Node-RED ไปยัง ESP32 ตัวบอร์ด ESP32 จะต้องดำเนินการอย่างไรกับ Topic สั่งงาน?",
+            c: [
+                "ทำการ Publish ข้อความไปที่ Topic นั้น",
+                "ทำการ Subscribe Topic นั้นเพื่อรอรับข้อความสั่งงาน (\"on\"/\"off\")",
+                "ติดตั้ง Mosquitto Broker ลงใน ESP32",
+                "ลบ Topic นั้นออกจากเซิร์ฟเวอร์"
+            ],
+            qKey: "q_10"
+        },
+        {
+            q: "ข้อใดอธิบายบทบาทของ Topic ในระบบสื่อสาร MQTT ได้ถูกต้องที่สุด?",
+            c: [
+                "เป็น IP Address ของเครื่อง Broker",
+                "เป็นสายสัญญาณกายภาพที่เชื่อมต่ออุปกรณ์",
+                "เป็นข้อความสตริงที่ใช้ระบุหมวดหมู่ช่องทางข้อมูล เพื่อให้ Broker กรองและกระจายข้อความได้ถูกต้อง",
+                "เป็นรหัสผ่านในการเข้าใช้งานเซิร์ฟเวอร์"
+            ],
+            qKey: "q_11"
+        },
+        {
+            q: "ซอฟต์แวร์ MQTT Broker ยอดนิยมที่นิยมนำมาติดตั้งใช้งานแบบ Local บน Linux / Raspberry Pi คือซอฟต์แวร์ใด?",
+            c: [
+                "Apache HTTP Server",
+                "Mosquitto MQTT Broker",
+                "MySQL Server",
+                "Nginx Server"
+            ],
+            qKey: "q_12"
+        },
+        {
+            q: "คำสั่งใดในระบบปฏิบัติการ Linux Ubuntu/Debian ใช้สำหรับติดตั้ง Mosquitto Broker และ Mosquitto Clients?",
+            c: [
+                "sudo apt install -y mosquitto mosquitto-clients",
+                "npm install mosquitto",
+                "pip install mosquitto-broker",
+                "git clone mosquitto-server"
+            ],
+            qKey: "q_13"
+        },
+        {
+            q: "คำสั่งใดใช้ในการทดสอบ Subscribe ติดตาม Topic บนเครื่อง Local Broker ผ่าน Terminal?",
+            c: [
+                "mosquitto_pub -h localhost -t testTopic -m \"Hello\"",
+                "mosquitto_sub -h localhost -t testTopic -u user -P pass",
+                "systemctl status mosquitto",
+                "mosquitto -v"
+            ],
+            qKey: "q_14"
+        }
+    ];
+
+    // ฟังก์ชันช่วยสุ่มเรียงลำดับอาร์เรย์ (Fisher-Yates Shuffle)
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex != 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
+    }
+
+    // ทำการสุ่มคำถาม และสุ่มตัวเลือก เพื่อป้องกันการจำตำแหน่ง
+    const container = document.getElementById('questionsContainer');
+    const shuffledQuestions = shuffle([...quizData]);
+
+    shuffledQuestions.forEach((item, index) => {
+        const block = document.createElement('div');
+        block.className = 'question-block';
+
+        // หัวข้อโจทย์ข้อสอบ (ไม่แสดงหมายเลขข้อ เพื่อความปลอดภัย)
+        const title = document.createElement('div');
+        title.className = 'question-title';
+        title.innerText = item.q;
+        block.appendChild(title);
+
+        // ตัวเลือกของข้อสอบ
+        const shuffledChoices = shuffle([...item.c]);
+        shuffledChoices.forEach((choice) => {
+            const optDiv = document.createElement('div');
+            optDiv.className = 'option-item';
+
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = item.qKey;
+            radio.value = choice;
+            radio.required = true;
+            radio.id = `${item.qKey}_${choice.replace(/\s+/g, '_')}`;
+
+            const label = document.createElement('label');
+            label.htmlFor = radio.id;
+            label.innerText = choice;
+
+            optDiv.appendChild(radio);
+            optDiv.appendChild(label);
+            block.appendChild(optDiv);
+        });
+
+        container.appendChild(block);
+    });
+
+    // ==========================================
+    // ตรวจสอบรหัสประจำตัวผู้สอบแบบเรียลไทม์
+    // ==========================================
+    let isStudentValid = true;
+    const studentIdInput = document.getElementById('studentIdInput');
+    const idStatusMsg = document.getElementById('idStatusMsg');
+
+    studentIdInput.addEventListener('blur', function() {
+        const studentId = this.value.trim();
+        if (studentId.length >= 3) {
+            idStatusMsg.style.display = 'block';
+            idStatusMsg.style.color = '#0d9488';
+            idStatusMsg.innerText = '🔄 กำลังตรวจสอบรหัสประจำตัว...';
+
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    if (response && response.submitted) {
+                        isStudentValid = false;
+                        idStatusMsg.style.color = '#dc3545';
+                        idStatusMsg.innerText = '❌ ' + response.message;
+                        alert('⚠️ ' + response.message);
+                    } else {
+                        isStudentValid = true;
+                        idStatusMsg.style.color = '#28a745';
+                        idStatusMsg.innerText = '✅ รหัสนี้สามารถเข้าทำแบบทดสอบได้';
+                    }
+                })
+                .withFailureHandler(function(err) {
+                    isStudentValid = true;
+                    idStatusMsg.style.display = 'none';
+                })
+                .checkStudentSubmitted(studentId);
+        } else {
+            idStatusMsg.style.display = 'none';
+        }
+    });
+
+    // ==========================================
+    // ระบบรักษาความปลอดภัยและป้องกันการทุจริต 6 ชั้น
+    // ==========================================
+    let cheatAttempts = 0;
+    const MAX_ATTEMPTS = 3;
+    const lockScreen = document.getElementById('lockScreen');
+    const captureShield = document.getElementById('captureShield');
+    const watermarkOverlay = document.getElementById('watermarkOverlay');
+
+    // เลเยอร์ลายน้ำ Forensic Watermark
+    function updateWatermark() {
+        const idVal = studentIdInput.value.trim();
+        const nameVal = document.getElementById('studentNameInput').value.trim();
+        const markText = (idVal || nameVal) ? `${idVal} • ${nameVal} • IoT-TATC-THERDSAK` : 'IoT-TATC-THERDSAK';
+
+        watermarkOverlay.innerHTML = '';
+        const count = 35;
+        for (let i = 0; i < count; i++) {
+            const item = document.createElement('div');
+            item.className = 'watermark-item';
+            item.innerText = markText;
+            watermarkOverlay.appendChild(item);
+        }
+    }
+    studentIdInput.addEventListener('input', updateWatermark);
+    document.getElementById('studentNameInput').addEventListener('input', updateWatermark);
+    updateWatermark();
+
+    // บันทึกประวัติและนับครั้งที่ทำผิดกฎ
+    function registerCheatAttempt(actionName) {
+        cheatAttempts++;
+        const studentId = studentIdInput.value.trim();
+        const studentName = document.getElementById('studentNameInput').value.trim();
+        const studentRoom = document.getElementById('studentRoomInput').value.trim();
+
+        // ส่ง Log เข้าระบบ Google Apps Script หรือ Local Server
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run.logBehavior(studentId, studentName, studentRoom, actionName, cheatAttempts);
+        }
+
+        if (cheatAttempts >= MAX_ATTEMPTS) {
+            lockScreen.style.display = 'block';
+            captureShield.style.display = 'none';
+            document.body.style.overflow = 'hidden';
+            window.onbeforeunload = null;
+        } else {
+            alert(`⚠️ คำเตือนความปลอดภัย (${cheatAttempts}/${MAX_ATTEMPTS})\nระบบตรวจพบ: ${actionName}\nหากทำผิดครบ ${MAX_ATTEMPTS} ครั้ง ระบบจะระงับการสอบทันที!`);
+        }
+    }
+
+    // 1. ดักจับการสลับหน้าจอ (Visibility Change)
+    document.addEventListener("visibilitychange", function() {
+        if (document.hidden) {
+            captureShield.style.display = "block";
+            registerCheatAttempt("สลับหน้าต่างหรือสลับแอป (Tab Switch)");
+        } else {
+            setTimeout(() => {
+                if (cheatAttempts < MAX_ATTEMPTS) {
+                    captureShield.style.display = "none";
+                }
+            }, 300);
+        }
+    });
+
+    // 2. ดักจับเมื่อหน้าต่างหลุดโฟกัส (Window Blur)
+    window.addEventListener("blur", function() {
+        captureShield.style.display = "block";
+        setTimeout(() => {
+            if (cheatAttempts < MAX_ATTEMPTS && document.hasFocus()) {
+                captureShield.style.display = "none";
+            }
+        }, 500);
+    });
+
+    window.addEventListener("focus", function() {
+        if (cheatAttempts < MAX_ATTEMPTS) {
+            captureShield.style.display = "none";
+        }
+    });
+
+    // 3. ดักจับคีย์ลัด PrintScreen, F12, Ctrl+P, Ctrl+S, Ctrl+Shift+S (Snipping Tool)
+    window.addEventListener("keydown", function(e) {
+        if (e.key === "PrintScreen" || e.keyCode === 44) {
+            e.preventDefault();
+            captureShield.style.display = "block";
+            navigator.clipboard.writeText("ไม่อนุญาตให้จับภาพหน้าจอข้อสอบ").catch(() => {});
+            registerCheatAttempt("กดปุ่ม PrintScreen บันทึกภาพหน้าจอ");
+            setTimeout(() => {
+                if (cheatAttempts < MAX_ATTEMPTS) captureShield.style.display = "none";
+            }, 1000);
+            return false;
+        }
+
+        if (e.key === "F12" || 
+            (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "i" || e.key === "C" || e.key === "c" || e.key === "J" || e.key === "j")) ||
+            (e.ctrlKey && (e.key === "U" || e.key === "u")) ||
+            (e.ctrlKey && (e.key === "P" || e.key === "p")) ||
+            (e.ctrlKey && (e.key === "S" || e.key === "s")) ||
+            (e.ctrlKey && e.shiftKey && (e.key === "S" || e.key === "s"))) {
+            e.preventDefault();
+            registerCheatAttempt(`พยายามใช้คีย์ลัดต้องห้าม (${e.key})`);
+            return false;
+        }
+    });
+
+    // 4. บล็อกคลิกขวา
+    document.addEventListener("contextmenu", function(e) {
+        e.preventDefault();
+        return false;
+    });
+
+    // 5. ป้องกันการลากคลุมข้อความ
+    document.addEventListener("selectstart", function(e) {
+        if (e.target.tagName !== "INPUT" && e.target.tagName !== "TEXTAREA") {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // 6. เตือนก่อนปิดหรือรีเฟรชหน้าเว็บ
+    window.onbeforeunload = function() {
+        return "คุณกำลังทำแบบทดสอบอยู่ หากออกจากหน้านี้คำตอบของคุณจะไม่ถูกบันทึก ยืนยันหรือไม่?";
+    };
+
+    // ปลดล็อกการเตือนเมื่อกดส่งฟอร์มอย่างถูกต้อง
+    document.getElementById('quizForm').addEventListener('submit', function(e) {
+        if (!isStudentValid) {
+            e.preventDefault();
+            alert('❌ รหัสประจำตัวนี้เคยส่งแบบทดสอบไปแล้ว ไม่อนุญาตให้ส่งซ้ำ');
+            return false;
+        }
+        window.onbeforeunload = null;
+    });
+
+    // ==========================================
+    // ระบบจัดการสำหรับครูผู้สอน (Google Sheets & Code Copy)
+    // ==========================================
+    const CURRENT_EXAM_KEY = 'exam_mqtt';
+
+    function extractSheetId(url) {
+        if (!url) return '';
+        const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        if (match && match[1]) {
+            return match[1];
+        }
+        if (/^[a-zA-Z0-9-_]{20,60}$/.test(url.trim())) {
+            return url.trim();
+        }
+        return '';
+    }
+
+    function updateSheetDisplay(url, sheetId) {
+        const badge = document.getElementById('sheetIdBadge');
+        const link = document.getElementById('sheetExternalLink');
+        if (sheetId) {
+            badge.innerText = `Sheet ID: ${sheetId}`;
+            badge.style.background = '#d1fae5';
+            badge.style.color = '#065f46';
+            if (link) {
+                link.href = `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
+                link.style.display = 'inline';
+            }
+        } else {
+            badge.innerText = 'ยังไม่ได้ระบุ Sheet ID';
+            badge.style.background = '#ccfbf1';
+            badge.style.color = '#115e59';
+            if (link) link.style.display = 'none';
+        }
+    }
+
+    async function saveTeacherSheetUrl() {
+        const input = document.getElementById('teacherSheetUrl');
+        const rawVal = input ? input.value.trim() : '';
+        const sheetId = extractSheetId(rawVal);
+        
+        if (!rawVal) {
+            alert('กรุณากรอกลิงก์หรือ ID ของ Google Sheets');
+            return;
+        }
+
+        if (!sheetId) {
+            alert('❌ รูปแบบลิงก์ Google Sheets ไม่ถูกต้อง กรุณาคัดลอก URL จากแอดเดรสบาร์ของเบราว์เซอร์');
+            return;
+        }
+
+        // บันทึกลง localStorage
+        localStorage.setItem(`sheet_url_${CURRENT_EXAM_KEY}`, rawVal);
+        localStorage.setItem(`sheet_id_${CURRENT_EXAM_KEY}`, sheetId);
+
+        // บันทึกลง Local Server (ถ้าเปิดใช้งาน)
+        try {
+            await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ examType: CURRENT_EXAM_KEY, sheetUrl: rawVal, sheetId: sheetId })
+            });
+        } catch (e) {}
+
+        updateSheetDisplay(rawVal, sheetId);
+        showCopyAlert(`✅ บันทึกลิงก์ Google Sheets เรียบร้อยแล้ว!<br><span style="font-size:0.85em; font-weight:normal;">Sheet ID: <strong>${sheetId}</strong></span>`, '#ecfdf5', '#065f46', '#a7f3d0');
+    }
+
+    async function loadTeacherSettings() {
+        let savedUrl = localStorage.getItem(`sheet_url_${CURRENT_EXAM_KEY}`) || '';
+        let savedId = localStorage.getItem(`sheet_id_${CURRENT_EXAM_KEY}`) || '';
+
+        try {
+            const res = await fetch('/api/settings');
+            if (res.ok) {
+                const allSettings = await res.json();
+                if (allSettings[CURRENT_EXAM_KEY]) {
+                    savedUrl = allSettings[CURRENT_EXAM_KEY].sheetUrl || savedUrl;
+                    savedId = allSettings[CURRENT_EXAM_KEY].sheetId || savedId;
+                }
+            }
+        } catch (e) {}
+
+        const input = document.getElementById('teacherSheetUrl');
+        if (input && savedUrl) {
+            input.value = savedUrl;
+        }
+        updateSheetDisplay(savedUrl, savedId);
+    }
+
+    function showCopyAlert(msg, bg, color, border) {
+        const el = document.getElementById('copyAlert');
+        if (!el) return;
+        el.style.display = 'block';
+        el.style.backgroundColor = bg;
+        el.style.color = color;
+        el.style.border = `1px solid ${border}`;
+        el.innerHTML = msg;
+        setTimeout(() => { el.style.display = 'none'; }, 4500);
+    }
+
+    async function copyCodeGsWithSheetId() {
+        const inputVal = document.getElementById('teacherSheetUrl') ? document.getElementById('teacherSheetUrl').value.trim() : '';
+        const sheetId = extractSheetId(inputVal) || localStorage.getItem(`sheet_id_${CURRENT_EXAM_KEY}`) || '';
+        let codeText = '';
+        
+        try {
+            const res = await fetch(`/api/code?exam=${CURRENT_EXAM_KEY}${sheetId ? '&sheetId=' + encodeURIComponent(sheetId) : ''}`);
+            if (res.ok) {
+                codeText = await res.text();
+            }
+        } catch (e) {}
+
+        if (!codeText) {
+            try {
+                const res2 = await fetch(`Code.gs`);
+                if (res2.ok) {
+                    codeText = await res2.text();
+                }
+            } catch (e2) {}
+        }
+
+        if (!codeText) {
+            alert('ไม่สามารถโหลดไฟล์ Code.gs ได้');
+            return;
+        }
+
+        if (sheetId) {
+            codeText = codeText.replace(/const\s+SPREADSHEET_ID\s*=\s*["'][^"']*["'];?/, `const SPREADSHEET_ID = "${sheetId}";`);
+        }
+
+        navigator.clipboard.writeText(codeText).then(() => {
+            const idNote = sheetId ? `(พร้อมใส่ Sheet ID: ${sheetId})` : '(ยังไม่ได้ระบุ Sheet ID)';
+            showCopyAlert(`📋 คัดลอก Code.gs เรียบร้อยแล้ว! ${idNote}<br><span style="font-size:0.85em; font-weight:normal;">นำไปวางใน Google Apps Script Editor แทนที่โค้ดเดิมได้ทันที</span>`, '#ecfdf5', '#065f46', '#a7f3d0');
+        }).catch(err => {
+            alert('เกิดข้อผิดพลาดในการคัดลอก: ' + err);
+        });
+    }
+
+    async function copyIndexHtmlCode() {
+        let htmlText = '';
+        try {
+            const res = await fetch('Index.html');
+            if (res.ok) {
+                htmlText = await res.text();
+            }
+        } catch (e) {}
+
+        if (!htmlText) {
+            htmlText = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+        }
+
+        navigator.clipboard.writeText(htmlText).then(() => {
+            showCopyAlert(`📄 คัดลอก Index.html เรียบร้อยแล้ว!<br><span style="font-size:0.85em; font-weight:normal;">สร้างไฟล์ Index.html ใน Apps Script แล้วนำไปวางได้ทันที</span>`, '#f0fdfa', '#0f766e', '#99f6e4');
+        }).catch(err => {
+            alert('เกิดข้อผิดพลาดในการคัดลอก: ' + err);
+        });
+    }
+
+    // เรียกโหลดการตั้งค่าทันที
+    if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', loadTeacherSettings);
+    } else {
+        loadTeacherSettings();
+    }
+</script>
+</body>
+</html>
