@@ -30,6 +30,10 @@
    - จำนวน: 15 ข้อ (15 คะแนน)
    - ครอบคลุมเนื้อหา: คุณสมบัติและความละเอียดของจอ OLED SSD1306 (128x64 พิกเซล) การเปล่งแสงได้เองโดยไม่ต้องมี Backlight, จอ LCD 16x2, ขาสัญญาณ I2C มาตรฐานของ ESP32 (GPIO 21 SDA / GPIO 22 SCL), ค่า I2C Address เริ่มต้น (OLED 0x3C / LCD 0x27), Library Adafruit_SSD1306 & Adafruit_GFX, พารามิเตอร์ขา Reset (-1), คำสั่ง `display.display()`, คำสั่ง `lcd.backlight()`, การกำหนดพิกัดเคอร์เซอร์ `lcd.setCursor(0, 1)`, การสร้าง Custom Characters 8 ตัวใน CGRAM, คำสั่งเลื่อนข้อความ `display.startscrollright()`, ตัวต้านทานปรับ Contrast, คำสั่ง `display.clearDisplay()`, โปรแกรมแปลงรูปภาพ LCD Image Converter, และการตรวจสอบแอดเดรสด้วย I2C_Scanner
 
+7. **แบบทดสอบ: ESP32/ESP8266 Web Server, WebSocket & LittleFS (`/exam_webserver`)**
+   - จำนวน: 15 ข้อ (15 คะแนน)
+   - ครอบคลุมเนื้อหา: การเชื่อมต่อ Full-Duplex บน TCP เดี่ยวกันด้วย WebSocket, ระบบไฟล์ LittleFS แทนที่ SPIFFS, ความแตกต่างของ HTTP GET vs POST (URL vs Request Body), การควบคุมแบบ Asynchronous ด้วย `ESPAsyncWebServer`, ประโยชน์ของการแยกไฟล์เว็บลง LittleFS, โฟลเดอร์ `data`, WebSocket Handshake จาก HTTP Request, การส่งข้อมูลแบบ One-way Push ด้วย Server-Sent Events (SSE), เทคโนโลยี Wear-Leveling ยืดอายุ Flash Memory, ฟังก์ชัน `LittleFS.exists()`, การส่ง JSON/URL-encoded เข้า Cloud IoT (เช่น ThingSpeak), ข้อควรระวังความปลอดภัยและการใช้วงจร Optical Isolation (Optocoupler) บน Relay Module, ปลั๊กอิน LittleFS Filesystem Uploader (.vsix), และการทำงานของรีเลย์ในโหมด Normally Open (NO)
+
 ---
 
 ## 🛡️ มาตรฐานความปลอดภัย 6 ชั้น (6-Layer Anti-Cheat)
@@ -39,7 +43,7 @@
 - **Layer 3: Desktop Anti-Screenshot** — ดักจับปุ่ม PrintScreen พร้อมล้างคลิปบอร์ด, บล็อกคำสั่ง `Ctrl+P`, `Ctrl+S`, `Ctrl+Shift+S` (Snipping Tool), `F12`
 - **Layer 4: Mobile Anti-Cheat** — ปิด Callout/Context Menu ป้องกันการกดค้างบน iOS & Android, บล็อกท่าทางปัด 3 นิ้วแคปหน้าจอ
 - **Layer 5: Blur Detection & Anti-Snipping Shield** — ม่านดำบังหน้าจอทันทีเมื่อสลับแอปหรือเปิดโปรแกรมแคปภาพ พร้อมระบบล็อกข้อสอบหากสลับหน้าจอเกิน 3 ครั้ง
-- **Layer 6: Dynamic Forensic Watermark** — เลเยอร์ลายน้ำประทับ "รหัสประจำตัว • ชื่อ-นามสกุล" ทแยงมุมทั่วทั้งหน้าจอแบบโปร่งแสง
+- **Layer 6: Dynamic Forensic Watermark** — เลเยอร์ลายน้ำประทับ "รหัสประจำตัว • ชื่อ-นามสกุล • IoT-TATC-THERDSAK" ทแยงมุมทั่วทั้งหน้าจอแบบโปร่งแสง
 
 ---
 
@@ -87,5 +91,6 @@ Exam_IoT/
 ├── exam_digitalpin_digitalsensor/ # ชุดข้อสอบ Digital Pin, Switch, Relay และ DHT Sensor (Index.html, Code.gs)
 ├── exam_analogpin_analogsensor/   # ชุดข้อสอบ Analog Pin, ADC, Sensors และการแปลงสัญญาณ (Index.html, Code.gs)
 ├── Install_Setting/               # ชุดข้อสอบ การติดตั้ง Arduino IDE & VS Code PlatformIO (Index.html, Code.gs)
-└── exam_display/                  # ชุดข้อสอบ OLED, LCD, Library, คำสั่ง และการเชื่อมต่อ (Index.html, Code.gs)
+├── exam_display/                  # ชุดข้อสอบ OLED, LCD, Library, คำสั่ง และการเชื่อมต่อ (Index.html, Code.gs)
+└── exam_webserver/                # ชุดข้อสอบ Web Server, WebSocket & LittleFS (Index.html, Code.gs)
 ```

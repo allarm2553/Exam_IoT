@@ -12,7 +12,9 @@
     // Identify current exam context from path
     var path = window.location.pathname.toLowerCase();
     var examType = 'exam_wifi';
-    if (path.indexOf('websocket') !== -1) {
+    if (path.indexOf('webserver') !== -1 || path.indexOf('littlefs') !== -1) {
+        examType = 'exam_webserver';
+    } else if (path.indexOf('websocket') !== -1) {
         examType = 'exam_websocket';
     } else if (path.indexOf('wifi') !== -1) {
         examType = 'exam_wifi';
