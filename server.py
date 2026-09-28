@@ -140,6 +140,26 @@ QUIZ_ANSWER_KEYS = {
             'q_14': 'I2C_Scanner'
         }
     },
+    'exam_webserver': {
+        'title': 'แบบทดสอบ ESP32/ESP8266 Web Server, WebSocket & LittleFS',
+        'keys': {
+            'q_0': 'WebSocket',
+            'q_1': 'LittleFS',
+            'q_2': 'GET ส่งคำขอ/รับข้อมูลผ่าน URL ส่วน POST ส่งข้อมูลภายใน Request Body',
+            'q_3': 'WebSocket',
+            'q_4': 'ESPAsyncWebServer',
+            'q_5': 'ช่วยให้โค้ดสะอาด เป็นระเบียบ และจัดการทรัพยากรเว็บได้ง่ายขึ้น',
+            'q_6': 'data',
+            'q_7': 'เริ่มต้นส่งคำขอผ่าน HTTP Request เพื่อยกระดับการเชื่อมต่อเป็น WebSocket',
+            'q_8': 'Server-Sent Events (SSE)',
+            'q_9': 'กระจายการเขียนข้อมูลเพื่อยืดอายุการใช้งานของ Flash Memory',
+            'q_10': 'LittleFS.exists()',
+            'q_11': 'JSON หรือ URL-encoded',
+            'q_12': 'การเลือกใช้อุปกรณ์ที่มี Optical Isolation (Optocoupler) เพื่อแยกวงจรกำลังไฟสูงออกจากไมโครคอนโทรลเลอร์',
+            'q_13': 'LittleFS Filesystem Uploader Plugin (.vsix)',
+            'q_14': 'วงจรจะเปิด (ตัดกระแสไฟ) ในสถานะปกติ และจะต่อวงจรเมื่อมีสัญญาณสั่งงาน'
+        }
+    },
     'exam_mqtt': {
         'title': 'แบบทดสอบ: หลักการและการใช้งาน MQTT',
         'keys': {
@@ -378,6 +398,10 @@ class ExamRequestHandler(BaseHTTPRequestHandler):
             rel_path = os.path.join('exam_analogpin_analogsensor', 'Index.html')
         elif path.lower() in ('/install_setting', '/install_setting/'):
             rel_path = os.path.join('Install_Setting', 'Index.html')
+        elif path.lower() in ('/exam_display', '/exam_display/'):
+            rel_path = os.path.join('exam_display', 'Index.html')
+        elif path.lower() in ('/exam_webserver', '/exam_webserver/'):
+            rel_path = os.path.join('exam_webserver', 'Index.html')
         else:
             rel_path = path.lstrip('/')
 

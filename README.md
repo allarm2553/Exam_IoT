@@ -28,9 +28,13 @@
 
 6. **แบบทดสอบ: OLED SSD1306, LCD 16x2, Library, คำสั่ง และการเชื่อมต่อ I2C (`/exam_display`)**
    - จำนวน: 15 ข้อ (15 คะแนน)
-   - ครอบคลุมเนื้อหา: ความละเอียดจอ OLED SSD1306 0.96" (128x64 พิกเซล), คุณสมบัติจอ OLED เปล่งแสงได้เองไม่ต้องมี Backlight, ขาสัญญาณ I2C มาตรฐาน ESP32 คือ GPIO 21 (SDA) และ GPIO 22 (SCL), I2C Address เริ่มต้นของ OLED (0x3C) และ LCD PCF8574 (0x27), Library `Adafruit_SSD1306` + `Adafruit_GFX` และ `LiquidCrystal_I2C`, พารามิเตอร์ `-1` (ไม่มีขา Reset), คำสั่งส่งข้อมูลบัฟเฟอร์ `display.display()`, คำสั่งเปิดไฟ `lcd.backlight()`, ตำแหน่งเคอร์เซอร์ `lcd.setCursor(0, 1)`, การสร้าง Custom Character ใน CGRAM (สูงสุด 8 ตัว), คำสั่งเลื่อนข้อความ `display.startscrollright()`, การปรับ Contrast ด้วย Trimpot, คำสั่ง `display.clearDisplay()`, เครื่องมือแปลงภาพบิตแมป LCD Image Converter และการสแกนหาอุปกรณ์ด้วย `I2C_Scanner`
+   - ครอบคลุมเนื้อหา: คุณสมบัติและความละเอียดของจอ OLED SSD1306 (128x64 พิกเซล) การเปล่งแสงได้เองโดยไม่ต้องมี Backlight, จอ LCD 16x2, ขาสัญญาณ I2C มาตรฐานของ ESP32 (GPIO 21 SDA / GPIO 22 SCL), ค่า I2C Address เริ่มต้น (OLED 0x3C / LCD 0x27), Library Adafruit_SSD1306 & Adafruit_GFX และ LiquidCrystal_I2C, พารามิเตอร์ขา Reset (-1), คำสั่ง `display.display()`, คำสั่ง `lcd.backlight()`, การกำหนดพิกัดเคอร์เซอร์ `lcd.setCursor(0, 1)`, การสร้าง Custom Characters ใน CGRAM (สูงสุด 8 ตัว), คำสั่งเลื่อนข้อความ `display.startscrollright()`, ตัวต้านทานปรับ Contrast, คำสั่ง `display.clearDisplay()`, โปรแกรมแปลงรูปภาพ LCD Image Converter และการตรวจสอบแอดเดรสด้วย I2C_Scanner
 
-7. **แบบทดสอบ: หลักการและการใช้งาน MQTT (`/exam_mqtt`)**
+7. **แบบทดสอบ: ESP32/ESP8266 Web Server, WebSocket & LittleFS (`/exam_webserver`)**
+   - จำนวน: 15 ข้อ (15 คะแนน)
+   - ครอบคลุมเนื้อหา: การเชื่อมต่อ Full-Duplex บน TCP เดียวกันด้วย WebSocket, ระบบไฟล์ LittleFS แทนที่ SPIFFS, ความแตกต่างของ HTTP GET vs POST (URL vs Request Body), การควบคุมแบบ Asynchronous ด้วย `ESPAsyncWebServer`, ประโยชน์ของการแยกไฟล์เว็บลง LittleFS, โฟลเดอร์ `data`, WebSocket Handshake จาก HTTP Request, การส่งข้อมูลแบบ One-way Push ด้วย Server-Sent Events (SSE), เทคโนโลยี Wear-Leveling ยืดอายุ Flash Memory, ฟังก์ชัน `LittleFS.exists()`, การส่ง JSON/URL-encoded เข้า Cloud IoT (เช่น ThingSpeak), ข้อควรระวังความปลอดภัยและการใช้วงจร Optical Isolation (Optocoupler) บน Relay Module, ปลั๊กอิน LittleFS Filesystem Uploader (.vsix), และการทำงานของรีเลย์ในโหมด Normally Open (NO)
+
+8. **แบบทดสอบ: หลักการและการใช้งาน MQTT (`/exam_mqtt`)**
    - จำนวน: 15 ข้อ (15 คะแนน)
    - ครอบคลุมเนื้อหา: ความหมายของ Message Queuing Telemetry Transport, โครงสร้างการสื่อสารแบบ Publish / Subscribe, คุณภาพการส่งข้อความ Quality of Service (QoS 0: At most once, QoS 1: At least once, QoS 2: Exactly once), หน้าที่ของ MQTT Broker ในการกรองและกระจายข้อความ, บทบาทของอุปกรณ์ IoT (ESP32/ESP8266) ในฐานะ MQTT Client (Publisher & Subscriber), การตั้งค่า Retain Flag เก็บข้อความล่าสุด, หมายเลขพอร์ตมาตรฐาน 1883 (Non-SSL), สัญลักษณ์แบ่งระดับชั้น Topic (/), การตั้งชื่อ Topic อย่างเป็นระบบ, การรับคำสั่งควบคุมด้วยการ Subscribe Topic, โปรแกรม Mosquitto MQTT Broker บน Linux, คำสั่งติดตั้ง `sudo apt install -y mosquitto mosquitto-clients` และคำสั่งทดสอบ `mosquitto_sub` / `mosquitto_pub`
 
@@ -92,5 +96,6 @@ Exam_IoT/
 ├── exam_analogpin_analogsensor/   # ชุดข้อสอบ Analog Pin, ADC, Sensors และการแปลงสัญญาณ (Index.html, Code.gs)
 ├── Install_Setting/               # ชุดข้อสอบ การติดตั้ง Arduino IDE & VS Code PlatformIO (Index.html, Code.gs)
 ├── exam_display/                  # ชุดข้อสอบ OLED SSD1306, LCD 16x2, Library และ I2C (Index.html, Code.gs)
+├── exam_webserver/                # ชุดข้อสอบ Web Server, WebSocket & LittleFS (Index.html, Code.gs)
 └── exam_mqtt/                     # ชุดข้อสอบ หลักการและการใช้งาน MQTT (Index.html, Code.gs)
 ```

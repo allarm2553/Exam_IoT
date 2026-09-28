@@ -12,7 +12,9 @@
     // Identify current exam context from path
     var path = window.location.pathname.toLowerCase();
     var examType = 'exam_wifi';
-    if (path.indexOf('websocket') !== -1) {
+    if (path.indexOf('webserver') !== -1 || path.indexOf('littlefs') !== -1) {
+        examType = 'exam_webserver';
+    } else if (path.indexOf('websocket') !== -1) {
         examType = 'exam_websocket';
     } else if (path.indexOf('wifi') !== -1) {
         examType = 'exam_wifi';
@@ -22,7 +24,7 @@
         examType = 'exam_analogpin_analogsensor';
     } else if (path.indexOf('install') !== -1 || path.indexOf('setting') !== -1) {
         examType = 'Install_Setting';
-    } else if (path.indexOf('display') !== -1) {
+    } else if (path.indexOf('display') !== -1 || path.indexOf('oled') !== -1 || path.indexOf('lcd') !== -1) {
         examType = 'exam_display';
     } else if (path.indexOf('mqtt') !== -1) {
         examType = 'exam_mqtt';

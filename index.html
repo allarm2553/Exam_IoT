@@ -614,14 +614,14 @@
             <div class="stat-card">
                 <div class="stat-icon" style="background: rgba(56, 189, 248, 0.15); color: var(--accent-blue);">📚</div>
                 <div>
-                    <div class="stat-val">7 ชุด</div>
+                    <div class="stat-val">8 ชุด</div>
                     <div class="stat-lbl">แบบทดสอบที่พร้อมสอบ</div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo);">🎯</div>
                 <div>
-                    <div class="stat-val">105 ข้อ</div>
+                    <div class="stat-val">120 ข้อ</div>
                     <div class="stat-lbl">คำถามมาตรฐานทั้งหมด</div>
                 </div>
             </div>
@@ -808,43 +808,75 @@
                     </div>
                 </div>
 
-                <!-- Exam 6: OLED & LCD Display -->
+                <!-- Exam 6: OLED, LCD, Library & I2C -->
                 <div class="exam-card">
                     <div>
                         <div class="card-header">
-                            <span class="exam-badge" style="background: rgba(124, 58, 237, 0.15); color: #a78bfa; border-color: rgba(124, 58, 237, 0.3);">โมดูลที่ 6: จอแสดงผล & I2C</span>
+                            <span class="exam-badge" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border-color: rgba(168, 85, 247, 0.3);">โมดูลที่ 6: จอแสดงผล & I2C</span>
                             <span style="font-size: 1.8rem;">🖥️</span>
                         </div>
-                        <h3 class="exam-title">OLED SSD1306 & LCD 16x2 Display</h3>
+                        <h3 class="exam-title">OLED SSD1306, LCD & I2C Commands</h3>
                         <p class="exam-desc">
-                            ทดสอบความรู้เกี่ยวกับจอ OLED SSD1306 (128x64), จอ I2C LCD 16x2 (PCF8574), Library Adafruit_SSD1306 / GFX / LiquidCrystal_I2C, ขาสัญญาณ I2C GPIO 21 (SDA) / 22 (SCL), I2C Scanner, การสร้าง Custom Char และการแปลงภาพ Bitmap
+                            ทดสอบการใช้งานจอ OLED SSD1306 (128x64) และจอ LCD 16x2, การเชื่อมต่อบัส I2C (GPIO 21 SDA / 22 SCL), Address 0x3C และ 0x27, Library Adafruit_SSD1306 และ Adafruit_GFX, คำสั่ง display.display(), การเลื่อนข้อความ, การปรับ Contrast, CGRAM Custom Characters, และเครื่องมือ I2C_Scanner
                         </p>
                         <div class="topic-tags">
                             <span class="topic-tag">15 ข้อ (15 คะแนน)</span>
-                            <span class="topic-tag">OLED 128x64 & LCD 16x2</span>
-                            <span class="topic-tag">I2C (GPIO 21/22)</span>
-                            <span class="topic-tag">Address 0x3C / 0x27</span>
-                            <span class="topic-tag">Adafruit_SSD1306 & GFX</span>
-                            <span class="topic-tag">I2C Scanner & Bitmap</span>
+                            <span class="topic-tag">OLED SSD1306 (128x64)</span>
+                            <span class="topic-tag">LCD 16x2 (I2C 0x27)</span>
+                            <span class="topic-tag">Adafruit_GFX & SSD1306</span>
+                            <span class="topic-tag">I2C_Scanner & Contrast</span>
+                            <span class="topic-tag">Custom Characters & Bitmaps</span>
                         </div>
                     </div>
                     <div class="exam-footer" style="flex-direction: column; gap: 10px;">
                         <div style="display: flex; gap: 10px; width: 100%;">
-                            <a href="/exam_display/" class="btn btn-primary" target="_blank" style="flex: 1; background: linear-gradient(135deg, #7c3aed, #9333ea);">
+                            <a href="/exam_display/" class="btn btn-primary" target="_blank" style="flex: 1; background: linear-gradient(135deg, #7c3aed, #a855f7);">
                                 <span>🚀 เริ่มทำแบบทดสอบ</span>
                             </a>
-                            <button class="btn btn-secondary" onclick="openTeacherModal('exam_display')" style="background: rgba(124, 58, 237, 0.12); color: #c4b5fd; border-color: rgba(124, 58, 237, 0.35);">
+                            <button class="btn btn-secondary" onclick="openTeacherModal('exam_display')" style="background: rgba(168, 85, 247, 0.12); color: #d8b4fe; border-color: rgba(168, 85, 247, 0.35);">
                                 <span>👨‍🏫 จัดการสำหรับครู (Sheet & โค้ด)</span>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Exam 7: MQTT Protocol & Broker -->
+                <!-- Exam 7: Web Server, WebSocket & LittleFS -->
                 <div class="exam-card">
                     <div>
                         <div class="card-header">
-                            <span class="exam-badge" style="background: rgba(13, 148, 136, 0.15); color: #2dd4bf; border-color: rgba(13, 148, 136, 0.3);">โมดูลที่ 7: โปรโตคอล MQTT & โบรเกอร์</span>
+                            <span class="exam-badge" style="background: rgba(8, 145, 178, 0.15); color: #22d3ee; border-color: rgba(8, 145, 178, 0.3);">โมดูลที่ 7: Web Server & LittleFS</span>
+                            <span style="font-size: 1.8rem;">🌐</span>
+                        </div>
+                        <h3 class="exam-title">ESP32/ESP8266 Web Server, WebSocket & LittleFS</h3>
+                        <p class="exam-desc">
+                            ทดสอบความเข้าใจเกี่ยวกับ Asynchronous Web Server, WebSocket Full-Duplex Handshake, ระบบไฟล์ LittleFS แทน SPIFFS, คุณสมบัติ Wear-Leveling, One-way Push ด้วย SSE, โฟลเดอร์ data และความปลอดภัยการต่อคุมรีเลย์ Optocoupler
+                        </p>
+                        <div class="topic-tags">
+                            <span class="topic-tag">15 ข้อ (15 คะแนน)</span>
+                            <span class="topic-tag">ESPAsyncWebServer</span>
+                            <span class="topic-tag">WebSocket vs SSE</span>
+                            <span class="topic-tag">LittleFS & Wear-Leveling</span>
+                            <span class="topic-tag">data Folder Upload</span>
+                            <span class="topic-tag">Relay Optocoupler & NO</span>
+                        </div>
+                    </div>
+                    <div class="exam-footer" style="flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 10px; width: 100%;">
+                            <a href="/exam_webserver/" class="btn btn-primary" target="_blank" style="flex: 1; background: linear-gradient(135deg, #0891b2, #06b6d4);">
+                                <span>🚀 เริ่มทำแบบทดสอบ</span>
+                            </a>
+                            <button class="btn btn-secondary" onclick="openTeacherModal('exam_webserver')" style="background: rgba(8, 145, 178, 0.12); color: #67e8f9; border-color: rgba(8, 145, 178, 0.35);">
+                                <span>👨‍🏫 จัดการสำหรับครู (Sheet & โค้ด)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exam 8: MQTT Protocol & Broker -->
+                <div class="exam-card">
+                    <div>
+                        <div class="card-header">
+                            <span class="exam-badge" style="background: rgba(13, 148, 136, 0.15); color: #2dd4bf; border-color: rgba(13, 148, 136, 0.3);">โมดูลที่ 8: โปรโตคอล MQTT & โบรเกอร์</span>
                             <span style="font-size: 1.8rem;">📡</span>
                         </div>
                         <h3 class="exam-title">หลักการและการใช้งาน MQTT</h3>
@@ -895,6 +927,7 @@
                         <option value="exam_analogpin_analogsensor">แบบทดสอบ: Analog Pin & ADC</option>
                         <option value="Install_Setting">แบบทดสอบ: Arduino IDE & VS Code</option>
                         <option value="exam_display">แบบทดสอบ: OLED & LCD Display</option>
+                        <option value="exam_webserver">แบบทดสอบ: Web Server & LittleFS</option>
                         <option value="exam_mqtt">แบบทดสอบ: MQTT Protocol & Broker</option>
                     </select>
                 </div>
@@ -1159,6 +1192,8 @@
                 ? 'แบบทดสอบ: การติดตั้งใช้งาน Arduino IDE, VS Code PlatformIO และการอัปโหลดโค้ด ESP32/ESP8266'
                 : examKey === 'exam_display'
                 ? 'แบบทดสอบเรื่อง OLED, LCD, Library, คำสั่ง และการเชื่อมต่อ'
+                : examKey === 'exam_webserver'
+                ? 'แบบทดสอบ ESP32/ESP8266 Web Server, WebSocket & LittleFS'
                 : 'แบบทดสอบ: หลักการและการใช้งาน MQTT';
 
             modal.style.display = 'flex';

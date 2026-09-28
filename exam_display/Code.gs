@@ -6,7 +6,7 @@
 // 1. ฟังก์ชันเปิดหน้าเว็บข้อสอบเข้าคู่กับ Index.html แบบพิมพ์ใหญ่พิมพ์เล็กตรงกัน
 function doGet() {
   return HtmlService.createHtmlOutputFromFile('Index')
-      .setTitle('แบบทดสอบ: OLED, LCD, Library, คำสั่ง และการเชื่อมต่อ')
+      .setTitle('แบบทดสอบ: OLED, LCD, Library, คำสั่ง และการเชื่อมต่อ I2C')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
       .addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
 }
@@ -190,12 +190,11 @@ function logBehavior(studentId, studentName, studentRoom, actionType, count) {
 // =========================================================================
 // 6. ฟังก์ชันสร้าง Google Forms Quiz อัตโนมัติ (รันเพื่อสร้าง Google Form ได้ทันที)
 // =========================================================================
-function createQuizForm() {
-  // 1. สร้าง Google Form ใหม่
-  var formTitle = "แบบทดสอบเรื่อง OLED, LCD, Library, คำสั่ง และการเชื่อมต่อ";
-  var form = FormApp.create(formTitle);
+function createDisplayQuizForm() {
+  // สร้าง Google Form ใหม่
+  var form = FormApp.create("แบบทดสอบเรื่อง OLED, LCD, Library, คำสั่ง และการเชื่อมต่อ");
   
-  // ตั้งค่าให้ Form เป็น แบบทดสอบ (Quiz)
+  // ตั้งค่าให้เป็นแบบทดสอบ (Quiz)
   form.setIsQuiz(true);
   form.setDescription("แบบทดสอบประเมินความรู้เกี่ยวกับ OLED SSD1306, LCD 16x2, Library, คำสั่งการใช้งาน และการเชื่อมต่อแบบ I2C จำนวน 15 ข้อ (ข้อละ 1 คะแนน)");
 
@@ -353,7 +352,11 @@ function createQuizForm() {
     }
   ];
 
+<<<<<<< HEAD
   // 2. วนลูปสร้างคำถามทีละข้อ
+=======
+  // วนลูปสร้างคำถามแต่ละข้อใน Google Form
+>>>>>>> origin/main
   for (var i = 0; i < quizData.length; i++) {
     var data = quizData[i];
     var item = form.addMultipleChoiceItem();
